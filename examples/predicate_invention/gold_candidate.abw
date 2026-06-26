@@ -1,0 +1,21 @@
+# Family: predicate_invention
+# Complexity: simple
+# Purpose:
+# This is the canonical ABW predicate-invention example. The learner introduces
+# a hidden concept that the visible world suggests but never names directly.
+# Main idea:
+# A good invented predicate should collect facts that genuinely move together.
+# Here that package is not just the relation `R`, but also the left and right
+# support predicates `P0` and `P1`.
+# How to read this file:
+# 1. The `define` clause proposes the latent concept.
+# 2. The `lemma` clause proves that the latent concept survives one joint step.
+# 3. The conjunction inside the definition is the key educational signal: it is
+#    exactly the hidden bridge the benchmark wants a solver to recover.
+# What to notice:
+# This is the positive example to compare against the trivial baseline in the
+# same folder.
+define PairStable(x:S0, y:S1) := R(x,y) & P0(x) & P1(y)
+
+# Read this as "the full hidden bridge advances intact under synchronized steps."
+lemma pairstable_step: forall x:S0 y:S1. PairStable(x,y) -> PairStable(f0(x), f1(y))

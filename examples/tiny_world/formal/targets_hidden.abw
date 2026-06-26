@@ -1,0 +1,2 @@
+goal hidden_step_2: R(f0(f0(c0)), f1(f1(d0))) & P0(f0(f0(c0))) & P1(f1(f1(d0)))
+goal hidden_step_3: R(f0(f0(f0(c0))), f1(f1(f1(d0)))) & P0(f0(f0(f0(c0)))) & P1(f1(f1(f1(d0))))

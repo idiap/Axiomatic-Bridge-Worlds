@@ -1,0 +1,22 @@
+# Family: quotient
+# Complexity: complex
+# Purpose:
+# This example teaches the quotient-style family, where many concrete states are
+# treated as different representatives of the same abstract object.
+# Main idea:
+# `Equivalent` says when two raw states belong to the same abstract class, while
+# `Canonical` identifies the preferred representative chosen by `norm`.
+# How to read this file:
+# 1. `Equivalent` names the intended "same abstract thing" relation.
+# 2. `Canonical` marks representatives already in normal form.
+# 3. `good_on_canonical` says proofs about `Good` can be pushed through the
+#    representative map `norm`.
+# What to notice:
+# This mirrors a classic mathematical move: reduce arbitrary representatives to
+# canonical ones before proving the main property.
+define Equivalent(x:S0, y:S0) := R(x,y)
+define Canonical(x:S0) := norm(x) = x
+
+# If `x` is good, normalizing it keeps it good, so proofs can move to canonical
+# representatives without losing the target property.
+lemma good_on_canonical: forall x:S0. Good(x) -> Good(norm(x))

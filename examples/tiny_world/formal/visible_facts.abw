@@ -1,0 +1,5 @@
+fact base_p0: P0(c0)
+fact base_p1: P1(d0)
+fact base_r: R(c0, d0)
+fact base_q0: Q0(c0)
+fact base_q1: Q1(d0)

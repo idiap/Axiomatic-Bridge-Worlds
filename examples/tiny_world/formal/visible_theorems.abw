@@ -1,0 +1,2 @@
+theorem visible_pair_step: forall x:S0 y:S1. R(x, y) & P0(x) & P1(y) -> R(f0(x), f1(y))
+theorem visible_q_pair_step: forall x:S0 y:S1. R(x, y) & Q0(x) & Q1(y) -> R(f0(x), f1(y))

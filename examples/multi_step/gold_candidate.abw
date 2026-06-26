@@ -1,0 +1,24 @@
+# Family: multi_step
+# Complexity: complex
+# Purpose:
+# This example teaches a layered bridge where the candidate is useful only after
+# several reasoning moves are chained together.
+# Main idea:
+# The benchmark is no longer asking for a single local theorem. It is asking
+# for an intermediate concept that survives a step and then unlocks a different
+# target predicate later in the reasoning chain.
+# Read it in three passes:
+# 1. `PairStable` names the cross-sort state we want to carry forward.
+# 2. `pair_step` proves that the bridge state survives one synchronized step.
+# 3. `pair_to_k` uses the bridge state to derive a new fact about `h(x,y)`.
+# What to notice:
+# The solver must combine definition unfolding, preservation, and target
+# introduction. That is what makes this family more complex than the one-line
+# simple examples.
+define PairStable(x:S0, y:S1) := A(x) & B(y) & R(x,y)
+
+# Layer 1: show that the invented bridge state is stable under the dynamics.
+lemma pair_step: forall x:S0 y:S1. PairStable(x,y) -> PairStable(f(x), g(y))
+
+# Layer 2: cash out the stable bridge into a different target on the composite.
+lemma pair_to_k: forall x:S0 y:S1. PairStable(x,y) -> K(h(x,y))

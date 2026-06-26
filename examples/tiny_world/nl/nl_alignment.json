@@ -1,0 +1,67 @@
+[
+  {
+    "nl": "If P0 holds of x, then P0 holds of the shift of x.",
+    "formal": "forall x:S0. P0(x) -> P0(f0(x))",
+    "source": "axioms.abw:p0_step"
+  },
+  {
+    "nl": "If P1 holds of y, then P1 holds of the lift of y.",
+    "formal": "forall y:S1. P1(y) -> P1(f1(y))",
+    "source": "axioms.abw:p1_step"
+  },
+  {
+    "nl": "If R holds between x and y, then R holds between the shift of x and the lift of y.",
+    "formal": "forall x:S0 y:S1. R(x, y) -> R(f0(x), f1(y))",
+    "source": "axioms.abw:r_step"
+  },
+  {
+    "nl": "If Q0 holds of x, then Q0 holds of the shift of x.",
+    "formal": "forall x:S0. Q0(x) -> Q0(f0(x))",
+    "source": "axioms.abw:q0_step"
+  },
+  {
+    "nl": "If Q1 holds of y, then Q1 holds of the lift of y.",
+    "formal": "forall y:S1. Q1(y) -> Q1(f1(y))",
+    "source": "axioms.abw:q1_step"
+  },
+  {
+    "nl": "If R holds between x and y and P0 holds of x and P1 holds of y, then R holds between the shift of x and the lift of y.",
+    "formal": "forall x:S0 y:S1. R(x, y) & P0(x) & P1(y) -> R(f0(x), f1(y))",
+    "source": "visible_theorems.abw:visible_pair_step"
+  },
+  {
+    "nl": "If R holds between x and y and Q0 holds of x and Q1 holds of y, then R holds between the shift of x and the lift of y.",
+    "formal": "forall x:S0 y:S1. R(x, y) & Q0(x) & Q1(y) -> R(f0(x), f1(y))",
+    "source": "visible_theorems.abw:visible_q_pair_step"
+  },
+  {
+    "nl": "P0 holds of mav-0.",
+    "formal": "P0(c0)",
+    "source": "visible_facts.abw:base_p0"
+  },
+  {
+    "nl": "P1 holds of ren-0.",
+    "formal": "P1(d0)",
+    "source": "visible_facts.abw:base_p1"
+  },
+  {
+    "nl": "R holds between mav-0 and ren-0.",
+    "formal": "R(c0, d0)",
+    "source": "visible_facts.abw:base_r"
+  },
+  {
+    "nl": "Q0 holds of mav-0.",
+    "formal": "Q0(c0)",
+    "source": "visible_facts.abw:base_q0"
+  },
+  {
+    "nl": "Q1 holds of ren-0.",
+    "formal": "Q1(d0)",
+    "source": "visible_facts.abw:base_q1"
+  },
+  {
+    "nl": "visible_step_1: R holds between the shift of mav-0 and the lift of ren-0 and P0 holds of the shift of mav-0 and P1 holds of the lift of ren-0.",
+    "formal": "R(f0(c0), f1(d0)) & P0(f0(c0)) & P1(f1(d0))",
+    "source": "targets_visible.abw:visible_step_1"
+  }
+]

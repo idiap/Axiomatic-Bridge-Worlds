@@ -1,0 +1,67 @@
+# SPDX-FileCopyrightText: Copyright © 2026 Idiap Research Institute <contact@idiap.ch>
+#
+# SPDX-FileContributor: Andre Freitas <andre.freitas@idiap.ch>
+# SPDX-FileContributor: Margarita Sharkova <margarita.sharkova@idiap.ch>
+# Neuro-symbolic AI Group
+#
+# SPDX-License-Identifier: MIT
+
+# Overview grammar for the ABW DSL.
+#
+# NORMATIVE SOURCE: the recursive-descent parser in `abw_core/dsl/parser.py` is
+# authoritative. This file documents every construct that parser accepts so the
+# surface is not parseable-but-undocumented; where the two ever disagree, the
+# parser wins.
+
+world        ::= statement*
+statement    ::= sort_decl | const_decl | func_decl | pred_decl
+               | axiom | lemma | theorem | fact | goal | define
+               | rewrite | theory | morphism
+sort_decl    ::= "sort" IDENT
+const_decl   ::= "const" IDENT ":" IDENT
+func_decl    ::= "func" IDENT ":" type_list "->" IDENT
+pred_decl    ::= "pred" IDENT ":" type_list
+axiom        ::= "axiom" IDENT? ":" formula
+lemma        ::= "lemma" IDENT? ":" formula
+theorem      ::= "theorem" IDENT? ":" formula
+fact         ::= "fact" IDENT? ":" atom
+goal         ::= "goal" IDENT? ":" atom ("&" atom)*
+define       ::= "define" IDENT "(" typed_vars? ")" ":=" atom ("&" atom)*
+rewrite      ::= "rewrite" IDENT? ":" term "->" term
+theory       ::= "theory" IDENT "{" statement* "}"
+morphism     ::= "morphism" IDENT ":" IDENT "->" IDENT "{" map_entry* "}"
+map_entry    ::= IDENT "->" IDENT
+formula      ::= quantifier? conjunction ("->" atom)?
+quantifier   ::= "forall" typed_vars "."
+typed_vars   ::= typed_var (("," typed_var) | (" " typed_var))*
+typed_var    ::= IDENT ":" IDENT
+conjunction  ::= atom ("&" atom)*
+atom         ::= IDENT "(" term_list? ")" | IDENT
+term_list    ::= term ("," term)*
+term         ::= IDENT "(" term_list? ")" | IDENT
+type_list    ::= IDENT ("," IDENT)*
+
+# Convenience forms accepted by the parser (not separate statements):
+# - `func c : S` (a single input sort and no `->`) is accepted as a constant
+#   declaration shorthand, equivalent to `const c : S`.
+# - `rewrite` placeholder variables are introduced implicitly, so a compact rule
+#   such as `rewrite step: f(x) -> g(x)` needs no quantifier.
+
+# ---------------------------------------------------------------------------
+# Accepted model-output tolerances (deliberate; do NOT tighten)
+# ---------------------------------------------------------------------------
+# Model-generated candidates arrive in heterogeneous surface styles across
+# providers and deployments (e.g. Azure-hosted vs OpenAI-deployment formatting,
+# trailing commas, list/JSON-style separators). To keep candidates from
+# different models scorable without weakening the core grammar, tolerance is
+# applied OUTSIDE the parser, at the scoring boundary:
+#
+# - `_normalize_candidate_surface` in `abw_core/scorer/evaluator.py` is the
+#   normative tolerance step. It strips trailing `,`/`;` separators after
+#   morphism `map_entry` lines before parsing. The core parser stays strict.
+# - Target adapters may additionally unwrap Markdown code fences and a
+#   `{"candidate": "..."}` JSON envelope before submitting candidate text.
+#
+# These tolerances are intentional and load-bearing for cross-model evaluation;
+# the grammar above describes the strict canonical surface, not the full set of
+# inputs accepted after normalization.

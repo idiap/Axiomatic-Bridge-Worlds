@@ -1,0 +1,20 @@
+{
+  "weights": {
+    "hidden_goal_solve_rate": 0.3,
+    "proof_cost_reduction": 0.2,
+    "compression_score": 0.1,
+    "semantic_equivalence_score": 0.2,
+    "novelty_score": 0.1,
+    "minimality_score": 0.1
+  },
+  "interactive": {
+    "enabled": true,
+    "query_budget": 20,
+    "countermodels": true
+  },
+  "prover_backend": {
+    "name": "local",
+    "command": []
+  },
+  "proof_budget": 3
+}

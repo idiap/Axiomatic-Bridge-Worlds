@@ -1,0 +1,22 @@
+# Family: predicate_invention
+# Complexity: simple baseline
+# Purpose:
+# This is the deliberately weak comparison point for predicate invention.
+# It helps readers see the difference between a merely legal definition and a
+# genuinely insightful hidden bridge.
+# Main idea:
+# `PairOnly` is only a renamed view of the visible relation `R`. That makes the
+# candidate valid, but thin: it does not absorb the extra structure carried by
+# `P0` and `P1`.
+# How to read this file:
+# 1. Compare the definition here to the stronger `gold_candidate.abw`.
+# 2. Notice that only the visible relation is renamed.
+# 3. Notice that the lemma therefore preserves less conceptual content.
+# Limitation:
+# This usually scores as a weak invention because it compresses syntax more than
+# it recovers hidden conceptual structure.
+define PairOnly(x:S0, y:S1) := R(x,y)
+
+# Once two points are related, stepping both sides keeps them related.
+# That is useful, but it is not the richer bridge the benchmark is looking for.
+lemma paironly_step: forall x:S0 y:S1. PairOnly(x,y) -> PairOnly(f0(x), f1(y))

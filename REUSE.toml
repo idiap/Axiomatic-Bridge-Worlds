@@ -1,0 +1,64 @@
+# SPDX-FileCopyrightText: Copyright © 2026 Idiap Research Institute <contact@idiap.ch>
+#
+# SPDX-FileContributor: Andre Freitas <andre.freitas@idiap.ch>
+# SPDX-FileContributor: Margarita Sharkova <margarita.sharkova@idiap.ch>
+# Neuro-symbolic AI Group
+#
+# SPDX-License-Identifier: MIT
+
+version = 1
+
+[[annotations]]
+path = [
+  "CHANGELOG.md",
+  "CODE_OF_CONDUCT.md",
+  "CONTRIBUTING.md",
+  "DISCLOSURE.md",
+  "README.md",
+  "SECURITY.md",
+  "configs/README.md",
+  "dataset/README.md",
+  "dataset/abw-formal-nl-core.zip",
+  "docs/architecture.md",
+  "docs/benchmark_task.md",
+  "docs/dsl.md",
+  "docs/family_cards.md",
+  "docs/index.md",
+  "docs/project_concepts.md",
+  "docs/repository_layout.md",
+  "docs/scoring.md",
+  "docs/structured_artifacts.md",
+  "docs/workflows.md",
+  "examples/README.md",
+  "examples/analogy/gold_candidate.abw",
+  "examples/invariant/gold_candidate.abw",
+  "examples/lemma_invention/gold_candidate.abw",
+  "examples/multi_step/gold_candidate.abw",
+  "examples/normal_form/gold_candidate.abw",
+  "examples/predicate_invention/gold_candidate.abw",
+  "examples/predicate_invention/trivial_candidate.abw",
+  "examples/quotient/gold_candidate.abw",
+  "examples/tiny_world/formal/axioms.abw",
+  "examples/tiny_world/formal/gold_solution.abw",
+  "examples/tiny_world/formal/hidden_bridge.json",
+  "examples/tiny_world/formal/proof_fixtures.json",
+  "examples/tiny_world/formal/scoring_config.json",
+  "examples/tiny_world/formal/signature.json",
+  "examples/tiny_world/formal/targets_hidden.abw",
+  "examples/tiny_world/formal/targets_visible.abw",
+  "examples/tiny_world/formal/visible_facts.abw",
+  "examples/tiny_world/formal/visible_theorems.abw",
+  "examples/tiny_world/metadata.json",
+  "examples/tiny_world/nl/examples.md",
+  "examples/tiny_world/nl/gold_informal_solution_private.md",
+  "examples/tiny_world/nl/hidden_bridge_private.md",
+  "examples/tiny_world/nl/nl_alignment.json",
+  "examples/tiny_world/nl/problem.md",
+  "examples/tiny_world/nl/theorem_cards.md",
+  "scripts/README.md",
+  "tests/README.md",
+  "uv.lock",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright © 2026 Idiap Research Institute <contact@idiap.ch>"
+SPDX-License-Identifier = "MIT"

@@ -1,0 +1,12 @@
+{
+  "hidden_step_2": {
+    "baseline_cost": 6,
+    "gold_cost": 2,
+    "budget": 3
+  },
+  "hidden_step_3": {
+    "baseline_cost": 9,
+    "gold_cost": 3,
+    "budget": 3
+  }
+}

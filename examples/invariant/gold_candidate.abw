@@ -1,0 +1,19 @@
+# Family: invariant
+# Complexity: medium
+# Purpose:
+# This example teaches the ABW invariant family. The candidate invents one
+# summary predicate that should remain true after the system evolves.
+# Main idea:
+# `Preserved` is a state summary. It says, "these three facts should be tracked
+# as one unit because the world keeps them together."
+# How to read this file:
+# 1. Read the `define` clause as the proposed invariant content.
+# 2. Read the `lemma` clause as the one-step inductive preservation rule.
+# 3. Imagine reapplying the lemma repeatedly to get a many-step argument.
+# What to notice:
+# The bridge is useful because it turns a conjunction of visible predicates into
+# one reusable concept with a stable proof rule.
+define Preserved(x:S0) := A(x) & B(x) & C(x)
+
+# One transition keeps the whole package intact, not just one conjunct at a time.
+lemma preserved_step: forall x:S0. Preserved(x) -> Preserved(step(x))

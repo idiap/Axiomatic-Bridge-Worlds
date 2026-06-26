@@ -1,0 +1,11 @@
+{
+  "world_id": "abw_predicate_invention_0007",
+  "family": "predicate_invention",
+  "seed": 7,
+  "max_term_depth": 3,
+  "hidden_steps": [
+    2,
+    3
+  ],
+  "include_distractors": true
+}

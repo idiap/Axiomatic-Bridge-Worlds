@@ -1,0 +1,5 @@
+axiom p0_step: forall x:S0. P0(x) -> P0(f0(x))
+axiom p1_step: forall y:S1. P1(y) -> P1(f1(y))
+axiom r_step: forall x:S0 y:S1. R(x, y) -> R(f0(x), f1(y))
+axiom q0_step: forall x:S0. Q0(x) -> Q0(f0(x))
+axiom q1_step: forall y:S1. Q1(y) -> Q1(f1(y))

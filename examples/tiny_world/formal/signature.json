@@ -1,0 +1,69 @@
+{
+  "sorts": [
+    {
+      "name": "S0"
+    },
+    {
+      "name": "S1"
+    }
+  ],
+  "constants": [
+    {
+      "name": "c0",
+      "sort": "S0"
+    },
+    {
+      "name": "d0",
+      "sort": "S1"
+    }
+  ],
+  "functions": [
+    {
+      "name": "f0",
+      "input_sorts": [
+        "S0"
+      ],
+      "output_sort": "S0"
+    },
+    {
+      "name": "f1",
+      "input_sorts": [
+        "S1"
+      ],
+      "output_sort": "S1"
+    }
+  ],
+  "predicates": [
+    {
+      "name": "P0",
+      "input_sorts": [
+        "S0"
+      ]
+    },
+    {
+      "name": "P1",
+      "input_sorts": [
+        "S1"
+      ]
+    },
+    {
+      "name": "R",
+      "input_sorts": [
+        "S0",
+        "S1"
+      ]
+    },
+    {
+      "name": "Q0",
+      "input_sorts": [
+        "S0"
+      ]
+    },
+    {
+      "name": "Q1",
+      "input_sorts": [
+        "S1"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+# Family: lemma_invention
+# Complexity: simple
+# Purpose:
+# This example teaches the ABW lemma-invention family. No new predicate is
+# introduced; the candidate contributes a new theorem that compresses a proof.
+# Main idea:
+# The hidden insight is that several visible rules compose into a shorter,
+# higher-value statement. In other words, the learner discovers a proof
+# shortcut rather than a new state abstraction.
+# Reading guide:
+# 1. Start from the premise `A(x)`.
+# 2. Follow the visible transition chain through `f`, then `g`, then `h`.
+# 3. Notice that the conclusion jumps straight to `D(h(g(f(x))))`.
+# What to notice:
+# This is what ABW looks like when the missing piece is a derived theorem rather
+# than an invented latent predicate.
+lemma chain3_candidate: forall x:S0. A(x) -> D(h(g(f(x))))

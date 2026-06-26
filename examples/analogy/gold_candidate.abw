@@ -1,0 +1,30 @@
+# Family: analogy
+# Complexity: simple
+# Purpose:
+# This example teaches the ABW "analogy" family, where the candidate is not a
+# new predicate or a new lemma, but a translation map between two already named
+# formal worlds.
+# Main idea:
+# A morphism is a dictionary from symbols in `Left` to corresponding symbols in
+# `Right`. If the dictionary preserves the logical roles of those symbols, then
+# proofs can be transported from one world to the other.
+# How to read this file:
+# 1. Start with the header `morphism Guess : Left -> Right`.
+# 2. Read each line inside the braces as "translate the left symbol this way."
+# 3. Notice that the file pairs sorts with sorts, constants with constants,
+#    functions with functions, and predicates with predicates.
+# What to notice:
+# This file does not prove a theorem directly. The candidate itself is the
+# proposed cross-world correspondence.
+morphism Guess : Left -> Right {
+  # Sort correspondence: anything of kind `L0` should be re-read as kind `R0`.
+  L0 -> R0
+  # Constant correspondence: distinguished objects should line up too.
+  l0 -> r0
+  # Function correspondences: dynamics or constructors should translate.
+  lf -> rf
+  lg -> rg
+  # Predicate correspondences: observable properties should match across sides.
+  LP -> RP
+  LQ -> RQ
+}

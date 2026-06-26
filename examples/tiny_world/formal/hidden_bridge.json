@@ -1,0 +1,134 @@
+{
+  "definitions": [
+    {
+      "name": "Aligned",
+      "parameters": [
+        {
+          "name": "x",
+          "sort": "S0"
+        },
+        {
+          "name": "y",
+          "sort": "S1"
+        }
+      ],
+      "body": [
+        {
+          "predicate": "R",
+          "terms": [
+            {
+              "kind": "var",
+              "variable": {
+                "name": "x",
+                "sort": "S0"
+              }
+            },
+            {
+              "kind": "var",
+              "variable": {
+                "name": "y",
+                "sort": "S1"
+              }
+            }
+          ]
+        },
+        {
+          "predicate": "P0",
+          "terms": [
+            {
+              "kind": "var",
+              "variable": {
+                "name": "x",
+                "sort": "S0"
+              }
+            }
+          ]
+        },
+        {
+          "predicate": "P1",
+          "terms": [
+            {
+              "kind": "var",
+              "variable": {
+                "name": "y",
+                "sort": "S1"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lemmas": [
+    {
+      "name": "aligned_step",
+      "variables": [
+        {
+          "name": "x",
+          "sort": "S0"
+        },
+        {
+          "name": "y",
+          "sort": "S1"
+        }
+      ],
+      "premises": [
+        {
+          "predicate": "Aligned",
+          "terms": [
+            {
+              "kind": "var",
+              "variable": {
+                "name": "x",
+                "sort": "S0"
+              }
+            },
+            {
+              "kind": "var",
+              "variable": {
+                "name": "y",
+                "sort": "S1"
+              }
+            }
+          ]
+        }
+      ],
+      "conclusion": {
+        "predicate": "Aligned",
+        "terms": [
+          {
+            "kind": "func",
+            "name": "f0",
+            "args": [
+              {
+                "kind": "var",
+                "variable": {
+                  "name": "x",
+                  "sort": "S0"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "func",
+            "name": "f1",
+            "args": [
+              {
+                "kind": "var",
+                "variable": {
+                  "name": "y",
+                  "sort": "S1"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "mappings": [],
+  "schemas": [],
+  "private_names": [
+    "Aligned"
+  ]
+}

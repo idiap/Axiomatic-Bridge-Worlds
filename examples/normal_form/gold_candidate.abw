@@ -1,0 +1,21 @@
+# Family: normal_form
+# Complexity: simple
+# Purpose:
+# This example teaches the "reason via canonical form" pattern. Instead of
+# proving a target directly on an arbitrary term, the candidate reasons through
+# a normalized representative.
+# Main idea:
+# `IsNormal` means "the normalizer no longer changes this term." That fixed
+# point view is a compact way to speak about normal forms in ABW.
+# How to read this file:
+# 1. The definition says what it means for a term to already be normalized.
+# 2. The lemma says normalized terms automatically satisfy the target `Done`.
+# 3. In a full world, the missing reasoning step is often "show that my term
+#    reaches such a normal form."
+# What to notice:
+# This is the smallest ABW sketch of a rewrite-oriented proof style: normalize
+# first, then prove on the canonical result.
+define IsNormal(x:T) := n(x) = x
+
+# Once the term is a fixed point of `n`, the target predicate follows cleanly.
+lemma done_after_normalize: forall x:T. IsNormal(x) -> Done(x)
