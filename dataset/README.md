@@ -76,7 +76,8 @@ For Formal Direct evaluation, expose these files to the model:
 - `formal/visible_facts.abw`
 - `formal/targets_visible.abw`
 
-For Natural-Language Direct or human-readable inspection, expose these files:
+For Cross-Track NL-to-formal evaluation or human-readable inspection, expose
+these files and ask the model to return an ABW DSL bridge:
 
 - `metadata.json`
 - `nl/problem.md`
@@ -86,6 +87,13 @@ For Natural-Language Direct or human-readable inspection, expose these files:
 
 The ABW runner uses these public files when constructing prompts for target
 models.
+
+For true Natural-Language Direct evaluation, expose the same public
+natural-language files but ask the model to return controlled-natural-language
+bridge blocks under the `abw-controlled-nl-v1` contract. Convert that text to
+ABW DSL with the deterministic converter in `abw_core.nl.controlled_candidate`
+before scoring. The converter performs no semantic repair; conversion failures
+are invalid candidates.
 
 ## Private, Gold, And Scoring Files
 
@@ -114,8 +122,10 @@ then score the model's final candidate with the private and scoring files.
 2. Choose a world from `abw-formal-nl-core/dev/` or
    `abw-formal-nl-core/test_public/`.
 3. Build the model prompt from the public model-input files listed above.
-4. Ask the model to produce an ABW candidate bridge.
-5. Score the candidate with the ABW software against the same packaged world.
+4. Ask the model to produce an ABW candidate bridge, or controlled-natural-language
+   bridge blocks for true Natural-Language Direct.
+5. Convert controlled-natural-language candidates when needed, then score the
+   ABW candidate with the ABW software against the same packaged world.
 
 For example, from the ABW software repository:
 

@@ -13,7 +13,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from abw_core import ir
-from abw_core.dsl.printer import format_atom, format_clause, format_definition, format_morphism
+from abw_core.dsl.printer import (
+    format_atom,
+    format_clause,
+    format_definition,
+    format_morphism,
+    format_rewrite,
+)
 from abw_core.nl.align import entry
 from abw_core.nl.leakage import detect_hidden_name_leaks
 from abw_core.nl.naming import NamingScheme, build_naming
@@ -39,8 +45,8 @@ def _render_term(term: ir.Term, naming: NamingScheme) -> str:
     if isinstance(term, ir.FuncTerm):
         if len(term.args) == 1:
             return f"the {naming.functions.get(term.name, term.name)} of {_render_term(term.args[0], naming)}"
-        rendered = ", ".join(_render_term(argument, naming) for argument in term.args)
-        return f"{naming.functions.get(term.name, term.name)}({rendered})"
+        rendered = " and ".join(_render_term(argument, naming) for argument in term.args)
+        return f"the {naming.functions.get(term.name, term.name)} of {rendered}"
     raise TypeError(f"Unsupported term type: {type(term)!r}")
 
 
@@ -71,13 +77,64 @@ def _render_goal(goal: ir.Goal, naming: NamingScheme) -> str:
     return f"{goal.name}: {body}."
 
 
-def _task_lines(world: ir.World) -> list[str]:
-    if world.hidden_bridge.mappings:
+def _render_rewrite(rule: ir.RewriteRule, naming: NamingScheme) -> str:
+    return f"The expression {_render_term(rule.lhs, naming)} rewrites to {_render_term(rule.rhs, naming)}."
+
+
+def _signature_lines(signature: ir.Signature, naming: NamingScheme) -> list[str]:
+    lines: list[str] = []
+    for sort in signature.sorts:
+        lines.append(f"- Object kind: {naming.sorts[sort.name]}.")
+    for constant in signature.constants:
+        lines.append(
+            f"- Named object: {naming.constants[constant.name]} is a {naming.sorts[constant.sort]} object."
+        )
+    for function in signature.functions:
+        inputs = " and ".join(f"a {naming.sorts[sort]} object" for sort in function.input_sorts)
+        lines.append(
+            f"- Operation: {naming.functions[function.name]} takes {inputs} and returns "
+            f"a {naming.sorts[function.output_sort]} object."
+        )
+    for predicate in signature.predicates:
+        label = naming.predicates[predicate.name]
+        if not predicate.input_sorts:
+            lines.append(f"- Relation: {label} is a public zero-place condition.")
+        elif len(predicate.input_sorts) == 1:
+            lines.append(f"- Relation: {label} can hold of a {naming.sorts[predicate.input_sorts[0]]} object.")
+        elif len(predicate.input_sorts) == 2:
+            lines.append(
+                f"- Relation: {label} can hold between a {naming.sorts[predicate.input_sorts[0]]} object "
+                f"and a {naming.sorts[predicate.input_sorts[1]]} object."
+            )
+    return lines
+
+
+def _theory_namings(theories: tuple[ir.Theory, ...]) -> dict[str, NamingScheme]:
+    combined = ir.Signature(
+        sorts=tuple(sort for theory in theories for sort in theory.document.sorts),
+        constants=tuple(constant for theory in theories for constant in theory.document.constants),
+        functions=tuple(function for theory in theories for function in theory.document.functions),
+        predicates=tuple(predicate for theory in theories for predicate in theory.document.predicates),
+    )
+    naming = build_naming(combined)
+    return {
+        theory.name: NamingScheme(
+            sorts={sort.name: naming.sorts[sort.name] for sort in theory.document.sorts},
+            constants={constant.name: naming.constants[constant.name] for constant in theory.document.constants},
+            functions={function.name: naming.functions[function.name] for function in theory.document.functions},
+            predicates={predicate.name: naming.predicates[predicate.name] for predicate in theory.document.predicates},
+        )
+        for theory in theories
+    }
+
+
+def _task_lines(family: str) -> list[str]:
+    if family == "analogy":
         return [
             "Infer a structure-preserving mapping between the public theories.",
             "Then use that mapping to transport visible source-theory theorems into the target theory.",
         ]
-    if world.hidden_bridge.lemmas and not world.hidden_bridge.definitions:
+    if family == "lemma_invention":
         return [
             "Invent a reusable shortcut lemma that collapses a repeated proof pattern in the public theory.",
             "Then use it to make deeper hidden targets cheaper to justify under the benchmark's proof budget.",
@@ -92,19 +149,25 @@ def render_world(world: ir.World) -> RenderedTrack:
     """Render one world into the Markdown artifacts shipped with a package."""
 
     naming = build_naming(world.signature)
-    sort_labels = [naming.sorts[sort.name] for sort in world.signature.sorts]
 
     problem_lines = [
         "# Problem",
         "",
-        f"There are {len(sort_labels)} synthetic object kinds in this world: {', '.join(sort_labels)}.",
         "The names are intentionally neutral so the task depends on structure, not stored background knowledge.",
+        "",
+        "## Public Vocabulary",
+        *_signature_lines(world.signature, naming),
         "",
         "## Rules",
     ]
     theorem_lines = ["# Theorem Cards", ""]
     examples_lines = ["# Examples", "", "## Visible Facts"]
     alignment: list[dict[str, str]] = []
+
+    for rule in world.rewrites:
+        sentence = _render_rewrite(rule, naming)
+        problem_lines.append(f"- {sentence}")
+        alignment.append(entry(sentence, format_rewrite(rule), f"axioms.abw:{rule.name}"))
 
     for clause in world.axioms:
         sentence = _render_clause(clause, naming)
@@ -129,11 +192,59 @@ def render_world(world: ir.World) -> RenderedTrack:
         examples_lines.append(f"- {sentence}")
         alignment.append(entry(sentence, " & ".join(format_atom(atom) for atom in goal.atoms), f"targets_visible.abw:{goal.name}"))
 
+    if world.theories:
+        theory_namings = _theory_namings(world.theories)
+        problem_lines.extend(["", "## Public Theories"])
+        theorem_lines.extend(["", "## Theory Theorems"])
+        examples_lines.extend(["", "## Theory Facts"])
+        for theory in world.theories:
+            theory_naming = theory_namings[theory.name]
+            theory_signature = theory.document.signature()
+            problem_lines.extend(
+                [
+                    "",
+                    f"### Theory {theory.name}",
+                    "#### Vocabulary",
+                    *_signature_lines(theory_signature, theory_naming),
+                    "#### Rules",
+                ]
+            )
+            for rule in theory.document.rewrites:
+                sentence = _render_rewrite(rule, theory_naming)
+                problem_lines.append(f"- {sentence}")
+                alignment.append(
+                    entry(sentence, format_rewrite(rule), f"axioms.abw:{theory.name}.{rule.name}")
+                )
+            for clause in theory.document.axioms:
+                sentence = _render_clause(clause, theory_naming)
+                problem_lines.append(f"- {sentence}")
+                alignment.append(
+                    entry(sentence, format_clause(clause), f"axioms.abw:{theory.name}.{clause.name}")
+                )
+            theorem_lines.extend(["", f"### Theory {theory.name}"])
+            for theorem in theory.document.theorems:
+                sentence = _render_clause(theorem, theory_naming)
+                theorem_lines.append(f"- **{theorem.name}**: {sentence}")
+                alignment.append(
+                    entry(
+                        sentence,
+                        format_clause(theorem),
+                        f"axioms.abw:{theory.name}.{theorem.name}",
+                    )
+                )
+            examples_lines.extend(["", f"### Theory {theory.name}"])
+            for fact in theory.document.facts:
+                sentence = _render_atom(fact.atom, theory_naming) + "."
+                examples_lines.append(f"- {sentence}")
+                alignment.append(
+                    entry(sentence, format_atom(fact.atom), f"axioms.abw:{theory.name}.{fact.name}")
+                )
+
     problem_lines.extend(
         [
             "",
             "## Task",
-            *_task_lines(world),
+            *_task_lines(world.family),
         ]
     )
 

@@ -7,8 +7,9 @@ statements easier to justify — a new predicate, a reusable lemma, or a morphis
 that transports structure between theories.
 
 The repository ships the typed DSL, deterministic world generators, a bounded
-(optionally solver-backed) prover, dataset and benchmark tooling, and LaTeX
-reporting, so ABW can be used as a reusable evaluation harness.
+(optionally solver-backed) prover, natural-language renderers, controlled-NL
+candidate conversion, and dataset and benchmark tooling, so ABW can be used as
+a reusable evaluation harness.
 
 ## A Tiny Example
 
@@ -31,10 +32,15 @@ lemma pairstable_step: forall x:S0 y:S1. PairStable(x,y) -> PairStable(f0(x), f1
 
 That bridge turns repeated proof burden into one named object reused across
 hidden targets. Each packaged world keeps the intended bridge **private**; the
-target system sees only public facts, axioms, theorems, goals, and a
-natural-language view, and submits a candidate that the scorer judges on
-validity, hidden-goal utility, compression, novelty, and bounded semantic
-alignment.
+target system sees only the public view selected by the condition, and submits a
+candidate that the scorer judges on validity, hidden-goal utility, compression,
+novelty, and bounded semantic alignment.
+
+The scorer consumes ABW DSL candidates. For true Natural-Language Direct
+experiments, `abw_core.nl.controlled_candidate` provides a frozen
+controlled-natural-language bridge contract and deterministic converter to ABW
+DSL; the converter performs no semantic repair, so failed conversions are scored
+as invalid by the unchanged scorer.
 
 ## Task Families
 
@@ -125,17 +131,18 @@ uv run python -m abw_core run-benchmark \
   --output artifacts/abw_benchmark_report.json
 ```
 
-The runner sends one request per world, expects ABW candidate text back, and
-writes a report with the dataset-level `primary_score` plus auxiliary semantic
-and operational metrics. Render it to LaTeX with `render-benchmark-report`.
-Repeat `--target-command` once per argv token; the same protocol accepts any
-custom adapter.
+The runner sends one request per world and expects the target adapter to return
+scoreable ABW candidate text. Adapters for controlled-natural-language outputs
+should run the deterministic conversion step before returning the candidate to
+the runner. The JSON output includes the dataset-level `primary_score` plus
+auxiliary semantic and operational metrics. Repeat `--target-command` once per
+argv token; the same protocol accepts any custom adapter.
 
 ## Read Next
 
 - [Documentation Index](docs/index.md) — the map of the full documentation set
 - [Project Concepts](docs/project_concepts.md) — what ABW measures, one example per family
-- [Workflows](docs/workflows.md) — diagnostics, sessions, datasets, robustness, reporting recipes
+- [Workflows](docs/workflows.md) — diagnostics, sessions, datasets, and robustness recipes
 - [Benchmark Task](docs/benchmark_task.md) — target-system contract, metrics, aggregation
 - [Architecture](docs/architecture.md) · [Scoring](docs/scoring.md) · [DSL](docs/dsl.md)
 - [Repository Layout](docs/repository_layout.md) — what belongs in each folder
@@ -144,12 +151,20 @@ custom adapter.
 
 ABW implements a deterministic local runtime: multi-family generation, bounded
 proving, solver-aided diagnostics, dataset packaging, target-system
-benchmarking, and LaTeX reporting. It is intentionally bounded — there is no
-remote model dependency in the core runtime, the local proof engine is not a
-full higher-order prover, the `z3`/`cvc5` integrations are finite-model
-diagnostics rather than complete theorem proving, and the interactive loop is a
-bounded refinement surface, not a proof assistant. That boundedness keeps ABW
-inspectable, reproducible, and locally debuggable.
+benchmarking, and local scoring. The disclosure surface is the
+framework code, public documentation, examples, tests, reusable dataset and
+benchmark wrappers, and the generic target adapter. Paper-specific generated
+artifacts and orchestration remain local, not part of the public framework
+surface. The curated reference package under
+`dataset/` is the tracked benchmark snapshot; generated roots under
+`datasets/` and outputs under `artifacts/` remain local by default.
+
+ABW is intentionally bounded: there is no remote model dependency in the core
+runtime, the local proof engine is not a full higher-order prover, the
+`z3`/`cvc5` integrations are finite-model diagnostics rather than complete
+theorem proving, and the interactive loop is a bounded refinement surface, not a
+proof assistant. That boundedness keeps ABW inspectable, reproducible, and
+locally debuggable.
 
 ## Project Hygiene
 

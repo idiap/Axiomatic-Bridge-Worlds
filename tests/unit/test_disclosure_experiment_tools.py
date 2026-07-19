@@ -13,6 +13,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from abw_core.packager import PRIVATE_WORLD_FILES, export_public_world, package_world
+from scripts.build_paired_difficulty_dataset import DIFFICULTY_LEVELS, _variant_world
 from scripts.difficulty_shape_summary import summarize_reports
 from scripts.robustness_plan import build_robustness_plan
 from scripts.robustness_summary import summarize_robustness_plan
@@ -129,3 +131,26 @@ def test_difficulty_shape_summary_groups_c0_c6_rows(tmp_path: Path) -> None:
     c6_row = next(row for row in summary["rows"] if row["difficulty_level_id"] == "c6_stress_boundary")
     assert c6_row["total_score_clean_baseline"] == 0.9
     assert c6_row["total_score_drop_from_c0"] == 0.5
+
+
+def test_paired_controls_precede_public_projection(tmp_path: Path) -> None:
+    levels = {level.index: level for level in DIFFICULTY_LEVELS}
+    base = _variant_world(family="predicate_invention", seed=17, base_index=0, level=levels[0])
+    deep = _variant_world(family="predicate_invention", seed=17, base_index=0, level=levels[1])
+    decoy = _variant_world(family="predicate_invention", seed=17, base_index=0, level=levels[4])
+
+    # Controls act on the complete world: C1 adds a private target and C4 adds public evidence.
+    assert deep.hidden_bridge == base.hidden_bridge
+    assert len(deep.targets_hidden) == len(base.targets_hidden) + 1
+    assert deep.targets_hidden[-1].name == "hidden_step_5"
+
+    decoy_names = decoy.metadata["paired_difficulty_added_symbols"]
+    assert decoy_names["predicate_flag"] in {predicate.name for predicate in decoy.signature.predicates}
+
+    full_root = package_world(decoy, tmp_path / "full")
+    public_root = export_public_world(full_root, tmp_path / "public")
+
+    assert all((full_root / path).exists() for path in PRIVATE_WORLD_FILES)
+    assert all(not (public_root / path).exists() for path in PRIVATE_WORLD_FILES)
+    signature = json.loads((public_root / "formal" / "signature.json").read_text(encoding="utf-8"))
+    assert decoy_names["predicate_flag"] in {predicate["name"] for predicate in signature["predicates"]}

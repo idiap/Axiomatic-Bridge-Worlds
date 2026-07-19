@@ -55,11 +55,17 @@ scripts/analyze_*.py
 scripts/build_*.py
 scripts/check_*availability.py
 scripts/check_*artifacts.py
+scripts/merge_benchmark_reports.py
+scripts/reclassify_legacy_nld_artifacts.py
+scripts/render_condition_evidence.py
+scripts/render_metric_correlation_table.py
+scripts/render_robustness_table.py
 scripts/generate_perturbed_dataset.py
 scripts/inspect_benchmark_failures.py
 scripts/i*_model_target.py
 scripts/o*_model_target.py
 scripts/retry_failed_invocations.py
+scripts/run_true_nld_grid.py
 scripts/run_*experiment.py
 scripts/run_*plan.py
 scripts/run_*queue.sh

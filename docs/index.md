@@ -6,7 +6,7 @@ This is the shortest route through the repository documentation.
 
 - [README](../README.md): project overview, setup, and the shortest path to a result
 - [Project Concepts](project_concepts.md): what ABW is trying to measure and why
-- [Workflows](workflows.md): command recipes for generation, diagnostics, sessions, robustness, and reporting
+- [Workflows](workflows.md): command recipes for generation, diagnostics, sessions, and robustness
 - [Benchmark Task](benchmark_task.md): the public evaluation contract for target systems
 - [Repository Layout](repository_layout.md): what belongs in each top-level folder
 

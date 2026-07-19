@@ -67,11 +67,11 @@ Public-only dataset exports reuse the same manifest shape but add
 tooling can tell that the corpus is intentionally stripped and not suitable for
 local hidden-goal scoring.
 
-### Benchmark reports
+### Benchmark outputs
 
-The JSON report written by [run-benchmark](benchmark_task.md) is the
-machine-readable benchmark result artifact. It is meant to support leaderboard
-aggregation, regression tracking, and downstream auditing.
+The JSON output written by [run-benchmark](benchmark_task.md) is the
+machine-readable benchmark result artifact. It is meant to support aggregation,
+regression tracking, and downstream auditing.
 
 Its top-level sections separate concerns cleanly:
 
@@ -83,22 +83,7 @@ Its top-level sections separate concerns cleanly:
 - `worlds`: one detailed record per evaluated world
 
 The per-world records deliberately store a candidate digest and not the full
-candidate text, so reports stay portable even on thousand-world runs.
-
-That JSON artifact is also the source for the LaTeX reporting layer exposed by
-[render-benchmark-report](benchmark_task.md). That layer can emit either:
-
-- a standalone `.tex` document for direct PDF compilation
-- a fragment intended for `\input{...}` into an external note or paper draft
-- a comparison report built from several benchmark JSON files
-
-When a human-readable appendix is needed, the same JSON artifact can be
-rendered into `.tex` and optional `.pdf` companions through
-[render-benchmark-report](benchmark_task.md). That reporting layer is purely a
-view over the benchmark JSON; it does not define a second aggregation contract.
-When the packaged world roots are still available, the renderer also derives
-task-class summaries, structural complexity buckets, and dataset descriptive
-statistics by re-opening those packaged worlds.
+candidate text, so outputs stay portable even on thousand-world runs.
 
 ### Packaged world metadata
 

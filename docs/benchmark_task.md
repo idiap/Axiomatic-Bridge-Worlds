@@ -63,7 +63,7 @@ The target system should return either:
 - preferred: JSON with `{"candidate": "<abw text>", "metadata": {...}}`
 - compatibility mode: raw ABW candidate text on stdout
 
-The benchmark report stores one scored record per world plus aggregate summaries
+The benchmark JSON output stores one scored record per world plus aggregate summaries
 for the full run, each split, and each family.
 
 ## Generic Model Adapter
@@ -90,7 +90,7 @@ python -m abw_core run-benchmark \
 The adapter also accepts command-line overrides such as `--model`,
 `--base-url`, `--max-tokens`, `--temperature`, and `--timeout-seconds` when
 environment variables are not convenient. Prefer environment variables for API
-keys because benchmark reports record the target command for traceability.
+keys because benchmark JSON outputs record the target command for traceability.
 
 ## Robustness And Difficulty Controls
 
@@ -119,7 +119,7 @@ python scripts/robustness_plan.py \
   --output artifacts/abw_robustness/robustness_plan.json
 ```
 
-After those commands have produced reports, compute original-minus-perturbed
+After those commands have produced JSON outputs, compute original-minus-perturbed
 drops:
 
 ```bash
@@ -171,7 +171,7 @@ means over the selected slice:
 - `mean_candidate_size`
 - `mean_total_score`
 
-Operational metrics are reported alongside the semantic ones:
+Operational metrics are included alongside the semantic ones:
 
 - `coverage`: completed evaluations divided by requested worlds
 - `failed_invocations`: target-system crashes, timeouts, or malformed outputs
@@ -208,9 +208,9 @@ integration contract. It is only a protocol smoke test:
 Because it uses repo fixtures, it is not a fair benchmark participant. Its role
 is to provide a known-good adapter for tests, CI, and downstream integrations.
 
-## Report Shape
+## Output Shape
 
-The JSON report written by `--output` contains:
+The JSON file written by `--output` contains:
 
 - `task`: benchmark identity and protocol version
 - `dataset`: root, manifest snapshot, split filter, and limit
@@ -222,71 +222,8 @@ The JSON report written by `--output` contains:
 - `worlds`: one detailed record per world, including target status, latency,
   candidate digest, and the full per-world score payload
 
-Use [render-benchmark-report](../abw_core/cli.py) to turn that JSON artifact
-into a LaTeX report with compact tables for the run overview, aggregate
-metrics, split summaries, family summaries, broader task classes, structural
-complexity bands, a class-by-complexity challenge portrait, dataset descriptive
-statistics, and notable world-level failures.
-
-```bash
-python -m abw_core render-benchmark-report \
-  --report artifacts/abw_benchmark_report.json \
-  --output artifacts/abw_benchmark_report.tex
-```
-
-If the host has a LaTeX engine available, the same entrypoint can also compile
-the rendered `.tex` file into a PDF companion artifact:
-
-```bash
-python -m abw_core render-benchmark-report \
-  --report artifacts/abw_benchmark_report.json \
-  --output artifacts/abw_benchmark_report.tex \
-  --pdf-output artifacts/abw_benchmark_report.pdf
-```
-
-The default PDF compiler command is `tectonic --outdir {outdir} {tex}`. Override
-it by repeating `--compile-command` once per argv token when a different LaTeX
-toolchain is preferred.
-
-The richer class, complexity, and dataset-statistics sections are computed by
-re-opening the packaged world directories referenced by the benchmark report.
-If those `world_root` directories are no longer available, the renderer still
-produces the core benchmark tables and notes that the structural analyses were
-unavailable.
-
-For paper inclusion, the same renderer can emit a fragment instead of a full
-document:
-
-```bash
-python -m abw_core render-benchmark-report \
-  --report artifacts/abw_benchmark_report.json \
-  --output artifacts/abw_benchmark_report_fragment.tex \
-  --fragment
-```
-
-And for cross-system evaluation, it can build comparison tables over several
-benchmark reports:
-
-```bash
-python -m abw_core render-benchmark-report \
-  --report artifacts/baseline_report.json \
-  --report artifacts/solver_report.json \
-  --name baseline \
-  --name solver \
-  --comparison-metric primary_score \
-  --output artifacts/abw_benchmark_comparison.tex
-```
-
-When the renderer is used in comparison mode, it emits:
-
-- a run-overview table across systems
-- a family-comparison table for the selected metric
-- a split-comparison table for the selected metric
-
-The same LaTeX reporting layer can also be triggered directly from
-`run-benchmark` by combining `--output` with `--latex-output`. Generated
-reports should be written under `artifacts/` or another local output path, not
-committed with the disclosure source.
+Generated benchmark outputs should be written under `artifacts/` or another
+local output path, not committed with the disclosure source.
 
 ## Evaluation Integrity
 

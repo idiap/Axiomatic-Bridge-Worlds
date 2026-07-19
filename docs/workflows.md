@@ -37,7 +37,8 @@ uv run abw export-public-dataset --dataset datasets/paper_core --output artifact
 ## 3. Evaluate a model
 
 `run-benchmark` sends one request per world, expects an ABW candidate back, and
-writes a report with the dataset-level `primary_score` plus per-metric means.
+writes JSON output with the dataset-level `primary_score` plus per-metric
+means.
 Repeat `--target-command` once per argv token (use `--target-command=-m` for
 tokens starting with `-`). The full contract is in
 [benchmark_task.md](benchmark_task.md).
@@ -53,8 +54,8 @@ uv run abw run-benchmark \
 
 `scripts/generic_model_target.py` adapts any OpenAI-compatible model via
 `ABW_MODEL_API_KEY`, `ABW_MODEL_BASE_URL`, and `ABW_MODEL_ID` (see the README).
-To run a model end to end in one step — validate, run, render a report, write a
-manifest — use `scripts/run_experiment.py`:
+To run a model end to end in one step -- validate, run, write JSON outputs, and
+write a manifest -- use `scripts/run_experiment.py`:
 
 ```bash
 uv run python scripts/run_experiment.py \
@@ -127,15 +128,8 @@ Sessions support `validate`, `equivalence`, `examples`, and `countermodel`
 queries; hidden-goal scoring happens only at submission. See
 [Scoring](scoring.md).
 
-## 6. Reports
+## 6. Benchmark Outputs
 
-Render a benchmark report to LaTeX (add `--fragment` for an `\input{}`-able
-snippet, or pass multiple `--report`/`--name` pairs to compare runs):
-
-```bash
-uv run abw render-benchmark-report \
-  --report artifacts/abw_report.json --output artifacts/abw_report.tex
-```
-
-`run-benchmark` can also emit the LaTeX sidecar inline via `--latex-output`. The
-`make benchmark-report*` targets wrap these flows.
+`run-benchmark` writes machine-readable JSON outputs under `artifacts/` or
+another local output path. Keep generated benchmark outputs out of the
+disclosure source unless a specific reference snapshot is intentionally added.
