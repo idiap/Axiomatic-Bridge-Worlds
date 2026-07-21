@@ -23,6 +23,7 @@ from abw_core.generator.base import WorldGenerationRequest, register_family, sco
 from abw_core.scorer.weights import NON_ANALOGY_WEIGHTS
 from abw_core.generator.obfuscation import default_world_id
 from abw_core.generator.templates import iterate_term
+from abw_core.generator.variation import schema_metadata, seeded_rng
 from abw_core.prover import build_closure, goal_cost
 from abw_core.typecheck import check_world, extend_signature_with_definitions
 
@@ -35,99 +36,105 @@ def generate_invariant_world(request: WorldGenerationRequest) -> ir.World:
     reusable preserved property.
     """
 
+    rng = seeded_rng(request.family, request.seed)
+    if request.seed == 7:
+        invariant_names = ("A", "B", "C")
+        base_count = 1
+        noise_count = 1
+        transition_names = ("step",)
+        goal_depths = tuple(request.hidden_steps)
+        definition_name = "StableTriple"
+    else:
+        invariant_names = tuple(chr(ord("A") + index) for index in range(rng.randint(2, 5)))
+        base_count = rng.randint(1, 3)
+        noise_count = rng.randint(0, 3)
+        transition_names = ("step", "jump")[: rng.randint(1, 2)]
+        available_depths = list(range(2, max(3, request.max_term_depth) + 1))
+        goal_count = min(len(available_depths), rng.randint(2, 3))
+        goal_depths = tuple(sorted(rng.sample(available_depths, goal_count)))
+        definition_name = "StableBundle"
+
     sorts = (ir.Sort("S0"),)
-    constants = (ir.ConstantSymbol("s0", "S0"),)
-    functions = (ir.FunctionSymbol("step", ("S0",), "S0"),)
-    predicates = (
-        ir.PredicateSymbol("A", ("S0",)),
-        ir.PredicateSymbol("B", ("S0",)),
-        ir.PredicateSymbol("C", ("S0",)),
-        ir.PredicateSymbol("Noise", ("S0",)),
+    constants = tuple(ir.ConstantSymbol(f"s{i}", "S0") for i in range(base_count))
+    functions = tuple(ir.FunctionSymbol(name, ("S0",), "S0") for name in transition_names)
+    predicates = tuple(ir.PredicateSymbol(name, ("S0",)) for name in invariant_names) + tuple(
+        ir.PredicateSymbol(f"Noise{i}", ("S0",)) for i in range(noise_count)
     )
     signature = ir.Signature(sorts=sorts, constants=constants, functions=functions, predicates=predicates)
 
     x = ir.Variable("x", "S0")
 
-    axioms = (
+    axioms = tuple(
         ir.HornClause(
-            name="a_step",
+            name=f"{predicate.lower()}_{transition}",
             variables=(x,),
-            premises=(ir.Atom("A", (ir.VarTerm(x),)),),
-            conclusion=ir.Atom("A", (ir.FuncTerm("step", (ir.VarTerm(x),)),)),
-        ),
+            premises=(ir.Atom(predicate, (ir.VarTerm(x),)),),
+            conclusion=ir.Atom(predicate, (ir.FuncTerm(transition, (ir.VarTerm(x),)),)),
+        )
+        for transition in transition_names
+        for predicate in invariant_names
+    ) + tuple(
         ir.HornClause(
-            name="b_step",
+            name=f"noise_{index}_step",
             variables=(x,),
-            premises=(ir.Atom("B", (ir.VarTerm(x),)),),
-            conclusion=ir.Atom("B", (ir.FuncTerm("step", (ir.VarTerm(x),)),)),
-        ),
-        ir.HornClause(
-            name="c_step",
-            variables=(x,),
-            premises=(ir.Atom("C", (ir.VarTerm(x),)),),
-            conclusion=ir.Atom("C", (ir.FuncTerm("step", (ir.VarTerm(x),)),)),
-        ),
-        ir.HornClause(
-            name="noise_step",
-            variables=(x,),
-            premises=(ir.Atom("Noise", (ir.VarTerm(x),)),),
-            conclusion=ir.Atom("Noise", (ir.FuncTerm("step", (ir.VarTerm(x),)),)),
-        ),
+            premises=(ir.Atom(f"Noise{index}", (ir.VarTerm(x),)),),
+            conclusion=ir.Atom(f"Noise{index}", (ir.FuncTerm("step", (ir.VarTerm(x),)),)),
+        )
+        for index in range(noise_count)
     )
     visible_theorems = (
         ir.HornClause(
             name="ab_step",
             variables=(x,),
-            premises=(ir.Atom("A", (ir.VarTerm(x),)), ir.Atom("B", (ir.VarTerm(x),))),
-            conclusion=ir.Atom("A", (ir.FuncTerm("step", (ir.VarTerm(x),)),)),
+            premises=tuple(ir.Atom(name, (ir.VarTerm(x),)) for name in invariant_names[:2]),
+            conclusion=ir.Atom(invariant_names[0], (ir.FuncTerm("step", (ir.VarTerm(x),)),)),
         ),
     )
-    visible_facts = (
-        ir.Fact("base_a", ir.Atom("A", (ir.ConstTerm("s0"),))),
-        ir.Fact("base_b", ir.Atom("B", (ir.ConstTerm("s0"),))),
-        ir.Fact("base_c", ir.Atom("C", (ir.ConstTerm("s0"),))),
-        ir.Fact("noise", ir.Atom("Noise", (ir.ConstTerm("s0"),))),
+    visible_facts = tuple(
+        ir.Fact(f"base_{name.lower()}_{base}", ir.Atom(name, (ir.ConstTerm(f"s{base}"),)))
+        for base in range(base_count)
+        for name in invariant_names
+    ) + tuple(
+        ir.Fact(f"noise_{index}", ir.Atom(f"Noise{index}", (ir.ConstTerm("s0"),)))
+        for index in range(noise_count)
     )
 
     stable_definition = ir.Definition(
-        name="StableTriple",
+        name=definition_name,
         parameters=(x,),
-        body=(
-            ir.Atom("A", (ir.VarTerm(x),)),
-            ir.Atom("B", (ir.VarTerm(x),)),
-            ir.Atom("C", (ir.VarTerm(x),)),
-        ),
+        body=tuple(ir.Atom(name, (ir.VarTerm(x),)) for name in invariant_names),
     )
-    stable_lemma = ir.HornClause(
-        name="stable_step",
-        variables=(x,),
-        premises=(ir.Atom("StableTriple", (ir.VarTerm(x),)),),
-        conclusion=ir.Atom("StableTriple", (ir.FuncTerm("step", (ir.VarTerm(x),)),)),
+    stable_lemmas = tuple(
+        ir.HornClause(
+            name=f"stable_{transition}",
+            variables=(x,),
+            premises=(ir.Atom(definition_name, (ir.VarTerm(x),)),),
+            conclusion=ir.Atom(definition_name, (ir.FuncTerm(transition, (ir.VarTerm(x),)),)),
+        )
+        for transition in transition_names
     )
-    hidden_bridge = ir.Bridge(definitions=(stable_definition,), lemmas=(stable_lemma,))
+    hidden_bridge = ir.Bridge(definitions=(stable_definition,), lemmas=stable_lemmas)
 
-    def make_goal(name: str, steps: int, budget: int) -> ir.Goal:
+    def make_goal(name: str, transition: str, steps: int, budget: int) -> ir.Goal:
         """Build one preserved-state target at a chosen transition depth.
 
         The family's hidden targets all ask for the same bundled invariant after
         different numbers of steps, which is why this helper is shared.
         """
 
-        term = iterate_term("step", ir.ConstTerm("s0"), steps)
+        term = iterate_term(transition, ir.ConstTerm("s0"), steps)
         return ir.Goal(
             name=name,
-            atoms=(
-                ir.Atom("A", (term,)),
-                ir.Atom("B", (term,)),
-                ir.Atom("C", (term,)),
-            ),
+            atoms=tuple(ir.Atom(predicate, (term,)) for predicate in invariant_names),
             budget=budget,
             description=f"Stable predicate bundle after {steps} transitions.",
         )
 
-    targets_visible = (make_goal("visible_stable_step", 1, request.proof_budget + 1),)
+    targets_visible = (make_goal("visible_stable_step", "step", 1, request.proof_budget + 1),)
     targets_hidden = tuple(
-        make_goal(f"hidden_stable_{steps}", steps, request.proof_budget) for steps in request.hidden_steps
+        make_goal(f"hidden_{transition}_{steps}", transition, steps, request.proof_budget)
+        for transition in transition_names
+        for steps in goal_depths
     )
 
     baseline = build_closure(
@@ -168,7 +175,17 @@ def generate_invariant_world(request: WorldGenerationRequest) -> ir.World:
             "seed": request.seed,
             "max_term_depth": request.max_term_depth,
             "dsl_version": "abw-dsl-v1",
-            "hidden_steps": list(request.hidden_steps),
+            "hidden_steps": list(goal_depths),
+            **schema_metadata(
+                request.family,
+                {
+                    "invariant_width": len(invariant_names),
+                    "base_count": base_count,
+                    "noise_count": noise_count,
+                    "transition_count": len(transition_names),
+                    "goal_depths": list(goal_depths),
+                },
+            ),
         },
     )
     check_world(world)

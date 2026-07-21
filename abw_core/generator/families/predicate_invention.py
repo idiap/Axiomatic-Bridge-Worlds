@@ -38,6 +38,7 @@ from abw_core.scorer.weights import NON_ANALOGY_WEIGHTS
 from abw_core.generator.distractors import predicate_invention_distractors
 from abw_core.generator.obfuscation import default_world_id
 from abw_core.generator.templates import iterate_term
+from abw_core.generator.variation import schema_metadata, seeded_rng
 from abw_core.prover import build_closure, goal_cost
 from abw_core.typecheck import check_world, extend_signature_with_definitions
 
@@ -50,16 +51,73 @@ def generate_predicate_invention_world(request: WorldGenerationRequest) -> ir.Wo
     surface less toy-like without changing the intended hidden abstraction.
     """
 
-    sorts = (ir.Sort("S0"), ir.Sort("S1"))
-    constants = (ir.ConstantSymbol("c0", "S0"), ir.ConstantSymbol("d0", "S1"))
-    functions = (ir.FunctionSymbol("f0", ("S0",), "S0"), ir.FunctionSymbol("f1", ("S1",), "S1"))
-    predicates = (
-        ir.PredicateSymbol("P0", ("S0",)),
-        ir.PredicateSymbol("P1", ("S1",)),
-        ir.PredicateSymbol("R", ("S0", "S1")),
-    )
+    rng = seeded_rng(request.family, request.seed)
+    if request.seed == 7:
+        left_predicates = ("P0",)
+        right_predicates = ("P1",)
+        pair_count = 1
+        noise_count = 2 if request.include_distractors else 0
+        goal_depths = tuple(request.hidden_steps)
+        legacy_distractors = request.include_distractors
+    else:
+        left_predicates = tuple(f"P{i}" for i in range(rng.randint(1, 3)))
+        right_predicates = tuple(
+            f"P{i}" for i in range(len(left_predicates), len(left_predicates) + rng.randint(1, 3))
+        )
+        pair_count = rng.randint(1, 3)
+        noise_count = rng.randint(0, 4) if request.include_distractors else 0
+        available_depths = list(range(2, max(3, request.max_term_depth) + 1))
+        goal_count = min(len(available_depths), rng.randint(2, 3))
+        goal_depths = tuple(sorted(rng.sample(available_depths, goal_count)))
+        legacy_distractors = False
 
-    distractor_predicates, distractor_axioms, distractor_facts, distractor_theorems = predicate_invention_distractors()
+    sorts = (ir.Sort("S0"), ir.Sort("S1"))
+    constants = tuple(ir.ConstantSymbol(f"c{i}", "S0") for i in range(pair_count)) + tuple(
+        ir.ConstantSymbol(f"d{i}", "S1") for i in range(pair_count)
+    )
+    functions = (ir.FunctionSymbol("f0", ("S0",), "S0"), ir.FunctionSymbol("f1", ("S1",), "S1"))
+    predicates = tuple(ir.PredicateSymbol(name, ("S0",)) for name in left_predicates) + tuple(
+        ir.PredicateSymbol(name, ("S1",)) for name in right_predicates
+    ) + (ir.PredicateSymbol("R", ("S0", "S1")),)
+
+    if legacy_distractors:
+        distractor_predicates, distractor_axioms, distractor_facts, distractor_theorems = (
+            predicate_invention_distractors()
+        )
+    else:
+        distractor_predicates = tuple(
+            ir.PredicateSymbol(f"N{i}", ("S0" if i % 2 == 0 else "S1",)) for i in range(noise_count)
+        )
+        distractor_axioms = tuple(
+            ir.HornClause(
+                name=f"noise_{i}_step",
+                variables=(ir.Variable("u", "S0" if i % 2 == 0 else "S1"),),
+                premises=(
+                    ir.Atom(
+                        f"N{i}",
+                        (ir.VarTerm(ir.Variable("u", "S0" if i % 2 == 0 else "S1")),),
+                    ),
+                ),
+                conclusion=ir.Atom(
+                    f"N{i}",
+                    (
+                        ir.FuncTerm(
+                            "f0" if i % 2 == 0 else "f1",
+                            (ir.VarTerm(ir.Variable("u", "S0" if i % 2 == 0 else "S1")),),
+                        ),
+                    ),
+                ),
+            )
+            for i in range(noise_count)
+        )
+        distractor_facts = tuple(
+            ir.Fact(
+                f"noise_{i}_base",
+                ir.Atom(f"N{i}", (ir.ConstTerm("c0" if i % 2 == 0 else "d0"),)),
+            )
+            for i in range(noise_count)
+        )
+        distractor_theorems = ()
     signature = ir.Signature(
         sorts=sorts,
         constants=constants,
@@ -70,19 +128,23 @@ def generate_predicate_invention_world(request: WorldGenerationRequest) -> ir.Wo
     x = ir.Variable("x", "S0")
     y = ir.Variable("y", "S1")
 
-    axioms = (
+    axioms = tuple(
         ir.HornClause(
-            name="p0_step",
+            name=f"{name.lower()}_step",
             variables=(x,),
-            premises=(ir.Atom("P0", (ir.VarTerm(x),)),),
-            conclusion=ir.Atom("P0", (ir.FuncTerm("f0", (ir.VarTerm(x),)),)),
-        ),
+            premises=(ir.Atom(name, (ir.VarTerm(x),)),),
+            conclusion=ir.Atom(name, (ir.FuncTerm("f0", (ir.VarTerm(x),)),)),
+        )
+        for name in left_predicates
+    ) + tuple(
         ir.HornClause(
-            name="p1_step",
+            name=f"{name.lower()}_step",
             variables=(y,),
-            premises=(ir.Atom("P1", (ir.VarTerm(y),)),),
-            conclusion=ir.Atom("P1", (ir.FuncTerm("f1", (ir.VarTerm(y),)),)),
-        ),
+            premises=(ir.Atom(name, (ir.VarTerm(y),)),),
+            conclusion=ir.Atom(name, (ir.FuncTerm("f1", (ir.VarTerm(y),)),)),
+        )
+        for name in right_predicates
+    ) + (
         ir.HornClause(
             name="r_step",
             variables=(x, y),
@@ -91,33 +153,40 @@ def generate_predicate_invention_world(request: WorldGenerationRequest) -> ir.Wo
         ),
     ) + (distractor_axioms if request.include_distractors else ())
 
+    bridge_atoms = (
+        ir.Atom("R", (ir.VarTerm(x), ir.VarTerm(y))),
+    ) + tuple(ir.Atom(name, (ir.VarTerm(x),)) for name in left_predicates) + tuple(
+        ir.Atom(name, (ir.VarTerm(y),)) for name in right_predicates
+    )
     visible_theorems = (
         ir.HornClause(
             name="visible_pair_step",
             variables=(x, y),
-            premises=(
-                ir.Atom("R", (ir.VarTerm(x), ir.VarTerm(y))),
-                ir.Atom("P0", (ir.VarTerm(x),)),
-                ir.Atom("P1", (ir.VarTerm(y),)),
-            ),
+            premises=bridge_atoms,
             conclusion=ir.Atom("R", (ir.FuncTerm("f0", (ir.VarTerm(x),)), ir.FuncTerm("f1", (ir.VarTerm(y),)))),
         ),
     ) + (distractor_theorems if request.include_distractors else ())
 
-    visible_facts = (
-        ir.Fact("base_p0", ir.Atom("P0", (ir.ConstTerm("c0"),))),
-        ir.Fact("base_p1", ir.Atom("P1", (ir.ConstTerm("d0"),))),
-        ir.Fact("base_r", ir.Atom("R", (ir.ConstTerm("c0"), ir.ConstTerm("d0")))),
+    visible_facts = tuple(
+        ir.Fact(f"base_{name.lower()}_{index}", ir.Atom(name, (ir.ConstTerm(f"c{index}"),)))
+        for index in range(pair_count)
+        for name in left_predicates
+    ) + tuple(
+        ir.Fact(f"base_{name.lower()}_{index}", ir.Atom(name, (ir.ConstTerm(f"d{index}"),)))
+        for index in range(pair_count)
+        for name in right_predicates
+    ) + tuple(
+        ir.Fact(
+            f"base_r_{index}",
+            ir.Atom("R", (ir.ConstTerm(f"c{index}"), ir.ConstTerm(f"d{index}"))),
+        )
+        for index in range(pair_count)
     ) + (distractor_facts if request.include_distractors else ())
 
     aligned_definition = ir.Definition(
         name="Aligned",
         parameters=(x, y),
-        body=(
-            ir.Atom("R", (ir.VarTerm(x), ir.VarTerm(y))),
-            ir.Atom("P0", (ir.VarTerm(x),)),
-            ir.Atom("P1", (ir.VarTerm(y),)),
-        ),
+        body=bridge_atoms,
     )
     aligned_lemma = ir.HornClause(
         name="aligned_step",
@@ -139,19 +208,15 @@ def generate_predicate_invention_world(request: WorldGenerationRequest) -> ir.Wo
         right = iterate_term("f1", ir.ConstTerm("d0"), steps)
         return ir.Goal(
             name=name,
-            atoms=(
-                ir.Atom("R", (left, right)),
-                ir.Atom("P0", (left,)),
-                ir.Atom("P1", (right,)),
-            ),
+            atoms=(ir.Atom("R", (left, right)),)
+            + tuple(ir.Atom(name, (left,)) for name in left_predicates)
+            + tuple(ir.Atom(name, (right,)) for name in right_predicates),
             budget=budget,
             description=f"Low-level synchronized state after {steps} transition steps.",
         )
 
     targets_visible = (make_goal("visible_step_1", 1, request.proof_budget),)
-    targets_hidden = tuple(
-        make_goal(f"hidden_step_{steps}", steps, request.proof_budget) for steps in request.hidden_steps
-    )
+    targets_hidden = tuple(make_goal(f"hidden_step_{steps}", steps, request.proof_budget) for steps in goal_depths)
 
     baseline = build_closure(
         signature,
@@ -194,8 +259,19 @@ def generate_predicate_invention_world(request: WorldGenerationRequest) -> ir.Wo
             "seed": request.seed,
             "max_term_depth": request.max_term_depth,
             "dsl_version": "abw-dsl-v1",
-            "hidden_steps": list(request.hidden_steps),
+            "hidden_steps": list(goal_depths),
             "include_distractors": request.include_distractors,
+            **schema_metadata(
+                request.family,
+                {
+                    "left_predicate_count": len(left_predicates),
+                    "right_predicate_count": len(right_predicates),
+                    "base_pair_count": pair_count,
+                    "noise_predicate_count": noise_count,
+                    "goal_depths": list(goal_depths),
+                    "legacy_distractors": legacy_distractors,
+                },
+            ),
         },
     )
     check_world(world)

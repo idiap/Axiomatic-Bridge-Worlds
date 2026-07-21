@@ -39,8 +39,22 @@ def build_naming(signature: ir.Signature) -> NamingScheme:
     such as `P`, `R`, or `Q`.
     """
 
-    sorts = {sort.name: SORT_WORDS[index % len(SORT_WORDS)] for index, sort in enumerate(signature.sorts)}
-    functions = {function.name: FUNCTION_WORDS[index % len(FUNCTION_WORDS)] for index, function in enumerate(signature.functions)}
+    sorts = {
+        sort.name: (
+            SORT_WORDS[index]
+            if index < len(SORT_WORDS)
+            else f"{SORT_WORDS[index % len(SORT_WORDS)]}-{index // len(SORT_WORDS)}"
+        )
+        for index, sort in enumerate(signature.sorts)
+    }
+    functions = {
+        function.name: (
+            FUNCTION_WORDS[index]
+            if index < len(FUNCTION_WORDS)
+            else f"{FUNCTION_WORDS[index % len(FUNCTION_WORDS)]}-{index // len(FUNCTION_WORDS)}"
+        )
+        for index, function in enumerate(signature.functions)
+    }
     predicates = {predicate.name: predicate.name for predicate in signature.predicates}
     per_sort_counts = {sort.name: 0 for sort in signature.sorts}
     constants: dict[str, str] = {}

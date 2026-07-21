@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: Copyright © 2026 Idiap Research Institute <contact@idiap.ch>
+#
+# SPDX-FileContributor: Andre Freitas <andre.freitas@idiap.ch>
+# SPDX-FileContributor: Margarita Sharkova <margarita.sharkova@idiap.ch>
+# Neuro-symbolic AI Group
+#
+# SPDX-License-Identifier: MIT
+
+# Structurally diverse paper-core release. The generator rejects repeated
+# schemas and repeated public task content across both splits.
+
+dataset_name: axiomatic_bridge_worlds_paper_core_seeded_v2
+version: 0.4.0
+dsl_version: abw-dsl-v2
+output_dir: datasets/paper_core_seeded_v2
+
+views:
+  - formal
+  - natural_language
+
+families:
+  - predicate_invention
+  - lemma_invention
+  - analogy
+  - invariant
+  - quotient
+  - normal_form
+  - multi_step
+
+splits:
+  dev:
+    examples_per_family: 5
+    start_seed: 4100
+  test_public:
+    examples_per_family: 50
+    start_seed: 3114
+
+start_seed: 3100
+max_term_depth: 3
+proof_budget: 4
+hidden_steps:
+  - 2
+  - 3
+include_distractors: true
+
+interactive:
+  enabled: true
+  query_budget: 20
+  countermodels: true
+
+prover_backend:
+  name: local
+  command: []

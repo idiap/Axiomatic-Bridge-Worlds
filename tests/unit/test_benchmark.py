@@ -28,7 +28,7 @@ def _packaged_dataset(tmp_path: Path) -> Path:
     world = generate_world(
         WorldGenerationRequest(
             family="predicate_invention",
-            seed=11,
+            seed=7,
             world_id="abw_train_0000",
         )
     )

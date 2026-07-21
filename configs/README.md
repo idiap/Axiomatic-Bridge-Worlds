@@ -7,6 +7,7 @@ what packaged material should be generated, and with what defaults?
 | --- | --- |
 | `mvp.yaml` | Default 14-world all-family smoke profile used by `scripts/generate_dataset.py`. |
 | `paper_core.yaml` | Paper-core reproduction: 5 dev + 50 public-test worlds per family. |
+| `paper_core_seeded_v2.yaml` | Structurally diverse paper-core release with schema-disjoint dev/test splits. |
 
 Every generated world packages the same task through both formal and
 natural-language artifacts; the `views` field records that paired surface (it

@@ -32,7 +32,7 @@ def test_cli_generate_and_score(tmp_path) -> None:
             "--family",
             "predicate_invention",
             "--seed",
-            "11",
+            "7",
             "--output",
             str(world_root),
         ],
@@ -605,6 +605,22 @@ splits:
     assert manifest["split_start_seeds"] == {"dev": 11, "test_public": 29}
     assert dev_metadata["seed"] == 11
     assert test_metadata["seed"] == 29
+    assert manifest["diversity"]["schema_unique_per_family"] == {
+        "predicate_invention": 2,
+        "lemma_invention": 2,
+    }
+    assert manifest["diversity"]["content_unique_per_family"] == {
+        "predicate_invention": 2,
+        "lemma_invention": 2,
+    }
+    assert manifest["diversity"]["public_content_unique_per_family"] == {
+        "predicate_invention": 2,
+        "lemma_invention": 2,
+    }
+    assert manifest["diversity"]["schema_overlap_across_splits_per_family"] == {
+        "predicate_invention": 0,
+        "lemma_invention": 0,
+    }
 
 
 def test_module_entrypoint_supports_python_m_abw_core(tmp_path) -> None:
@@ -618,7 +634,7 @@ def test_module_entrypoint_supports_python_m_abw_core(tmp_path) -> None:
             "--family",
             "predicate_invention",
             "--seed",
-            "11",
+            "7",
             "--output",
             str(world_root),
         ],
@@ -641,7 +657,7 @@ def test_score_candidate_reports_counterexamples_for_bad_lemma(tmp_path) -> None
             "--family",
             "predicate_invention",
             "--seed",
-            "11",
+            "7",
             "--output",
             str(world_root),
         ],
@@ -690,7 +706,7 @@ def test_cli_countermodel_goal_reports_bounded_model_for_failed_goal(tmp_path) -
             "--family",
             "multi_step",
             "--seed",
-            "11",
+            "7",
             "--output",
             str(world_root),
         ],
@@ -878,7 +894,7 @@ def test_cli_session_lifecycle(tmp_path) -> None:
             "--family",
             "predicate_invention",
             "--seed",
-            "11",
+            "7",
             "--output",
             str(world_root),
         ],
@@ -1020,7 +1036,7 @@ def test_cli_session_equivalence_query(tmp_path) -> None:
             "--family",
             "predicate_invention",
             "--seed",
-            "11",
+            "7",
             "--output",
             str(world_root),
         ],

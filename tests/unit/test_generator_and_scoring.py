@@ -14,6 +14,7 @@ equivalence, and counterexample reporting reward the intended bridge behavior.
 """
 
 from abw_core.generator import WorldGenerationRequest, generate_world, registered_families
+from abw_core.generator.variation import benchmark_content_fingerprint, public_content_fingerprint
 from abw_core.scorer import evaluate_candidate
 
 
@@ -52,8 +53,7 @@ define Canonical(x:S0) := norm(x) = x
 lemma good_on_canonical: forall x:S0. Good(x) -> Good(norm(x))
 """,
     "normal_form": """
-define IsNormal(x:T) := n(x) = x
-lemma done_after_normalize: forall x:T. IsNormal(x) -> Done(x)
+    lemma done_after_normalize: forall x:T. Marker(x) -> Done(n(x))
 """,
     "multi_step": """
 define PairStable(x:S0, y:S1) := A(x) & B(y) & R(x,y)
@@ -133,6 +133,31 @@ def test_generated_world_metadata_declares_dsl_version() -> None:
         world = generate_world(WorldGenerationRequest(family=family, seed=7))
         assert "dsl_version" in world.metadata, family
         assert world.metadata["dsl_version"] in {"abw-dsl-v1", "abw-dsl-v2"}
+
+
+def test_different_seeds_change_each_family_task_content() -> None:
+    for family in registered_families():
+        first = generate_world(
+            WorldGenerationRequest(family=family, seed=8, max_term_depth=3, hidden_steps=(2, 3))
+        )
+        second = generate_world(
+            WorldGenerationRequest(family=family, seed=9, max_term_depth=3, hidden_steps=(2, 3))
+        )
+        assert first.metadata["schema_fingerprint"] != second.metadata["schema_fingerprint"], family
+        assert benchmark_content_fingerprint(first) != benchmark_content_fingerprint(second), family
+        assert public_content_fingerprint(first) != public_content_fingerprint(second), family
+
+
+def test_seeded_gold_bridge_reduces_at_least_one_proof_fixture() -> None:
+    for family in registered_families():
+        world = generate_world(
+            WorldGenerationRequest(family=family, seed=8, max_term_depth=3, hidden_steps=(2, 3))
+        )
+        assert any(
+            fixture.get("gold_cost") is not None
+            and (fixture.get("baseline_cost") is None or fixture["gold_cost"] < fixture["baseline_cost"])
+            for fixture in world.proof_fixtures.values()
+        ), family
 
 
 def test_morphism_candidate_tolerates_trailing_mapping_commas() -> None:

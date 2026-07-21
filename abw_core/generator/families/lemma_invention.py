@@ -24,6 +24,7 @@ from abw_core.generator.base import WorldGenerationRequest, register_family, sco
 from abw_core.scorer.weights import NON_ANALOGY_WEIGHTS
 from abw_core.generator.obfuscation import default_world_id
 from abw_core.generator.templates import iterate_term
+from abw_core.generator.variation import schema_metadata, seeded_rng
 from abw_core.prover import build_closure, goal_cost
 from abw_core.typecheck import check_world
 
@@ -36,72 +37,106 @@ def generate_lemma_invention_world(request: WorldGenerationRequest) -> ir.World:
     theorem that collapses the full chain.
     """
 
+    rng = seeded_rng(request.family, request.seed)
+    if request.seed == 7:
+        chain_length = 3
+        base_count = 1
+        shortcut_profile = 3
+        noise_count = 0
+        include_shifted_goal = True
+    else:
+        chain_length = rng.randint(3, 4)
+        base_count = rng.randint(1, 3)
+        shortcut_profile = rng.randint(0, 3)
+        noise_count = rng.randint(0, 3)
+        include_shifted_goal = bool(rng.getrandbits(1)) and request.max_term_depth > chain_length
+
+    predicate_names = tuple(chr(ord("A") + index) for index in range(chain_length + 1))
+    function_names = ("f", "g", "h", "j")[:chain_length]
     sorts = (ir.Sort("S0"),)
-    constants = (ir.ConstantSymbol("c0", "S0"),)
-    functions = (
-        ir.FunctionSymbol("f", ("S0",), "S0"),
-        ir.FunctionSymbol("g", ("S0",), "S0"),
-        ir.FunctionSymbol("h", ("S0",), "S0"),
-    )
-    predicates = (
-        ir.PredicateSymbol("A", ("S0",)),
-        ir.PredicateSymbol("B", ("S0",)),
-        ir.PredicateSymbol("C", ("S0",)),
-        ir.PredicateSymbol("D", ("S0",)),
+    constants = tuple(ir.ConstantSymbol(f"c{i}", "S0") for i in range(base_count))
+    functions = tuple(ir.FunctionSymbol(name, ("S0",), "S0") for name in function_names)
+    predicates = tuple(ir.PredicateSymbol(name, ("S0",)) for name in predicate_names) + tuple(
+        ir.PredicateSymbol(f"Noise{i}", ("S0",)) for i in range(noise_count)
     )
     signature = ir.Signature(sorts=sorts, constants=constants, functions=functions, predicates=predicates)
 
     x = ir.Variable("x", "S0")
 
-    axioms = (
+    def apply_functions(term: ir.Term, names: tuple[str, ...]) -> ir.Term:
+        for name in names:
+            term = ir.FuncTerm(name, (term,))
+        return term
+
+    axioms = tuple(
         ir.HornClause(
-            name="a_to_b",
+            name=f"{predicate_names[index].lower()}_to_{predicate_names[index + 1].lower()}",
             variables=(x,),
-            premises=(ir.Atom("A", (ir.VarTerm(x),)),),
-            conclusion=ir.Atom("B", (ir.FuncTerm("f", (ir.VarTerm(x),)),)),
-        ),
+            premises=(ir.Atom(predicate_names[index], (ir.VarTerm(x),)),),
+            conclusion=ir.Atom(
+                predicate_names[index + 1],
+                (ir.FuncTerm(function_names[index], (ir.VarTerm(x),)),),
+            ),
+        )
+        for index in range(chain_length)
+    ) + tuple(
         ir.HornClause(
-            name="b_to_c",
+            name=f"noise_{index}_step",
             variables=(x,),
-            premises=(ir.Atom("B", (ir.VarTerm(x),)),),
-            conclusion=ir.Atom("C", (ir.FuncTerm("g", (ir.VarTerm(x),)),)),
-        ),
-        ir.HornClause(
-            name="c_to_d",
-            variables=(x,),
-            premises=(ir.Atom("C", (ir.VarTerm(x),)),),
-            conclusion=ir.Atom("D", (ir.FuncTerm("h", (ir.VarTerm(x),)),)),
-        ),
+            premises=(ir.Atom(f"Noise{index}", (ir.VarTerm(x),)),),
+            conclusion=ir.Atom(f"Noise{index}", (ir.FuncTerm("f", (ir.VarTerm(x),)),)),
+        )
+        for index in range(noise_count)
     )
-    visible_theorems = (
-        ir.HornClause(
-            name="a_to_c",
-            variables=(x,),
-            premises=(ir.Atom("A", (ir.VarTerm(x),)),),
-            conclusion=ir.Atom("C", (ir.FuncTerm("g", (ir.FuncTerm("f", (ir.VarTerm(x),)),)),)),
-        ),
-        ir.HornClause(
-            name="b_to_d",
-            variables=(x,),
-            premises=(ir.Atom("B", (ir.VarTerm(x),)),),
-            conclusion=ir.Atom("D", (ir.FuncTerm("h", (ir.FuncTerm("g", (ir.VarTerm(x),)),)),)),
-        ),
+
+    visible_theorem_list: list[ir.HornClause] = []
+    if shortcut_profile & 1:
+        visible_theorem_list.append(
+            ir.HornClause(
+                name="prefix_shortcut",
+                variables=(x,),
+                premises=(ir.Atom(predicate_names[0], (ir.VarTerm(x),)),),
+                conclusion=ir.Atom(
+                    predicate_names[2],
+                    (apply_functions(ir.VarTerm(x), function_names[:2]),),
+                ),
+            )
+        )
+    if shortcut_profile & 2:
+        visible_theorem_list.append(
+            ir.HornClause(
+                name="suffix_shortcut",
+                variables=(x,),
+                premises=(ir.Atom(predicate_names[-3], (ir.VarTerm(x),)),),
+                conclusion=ir.Atom(
+                    predicate_names[-1],
+                    (apply_functions(ir.VarTerm(x), function_names[-2:]),),
+                ),
+            )
+        )
+    visible_theorems = tuple(visible_theorem_list)
+    visible_facts = tuple(
+        ir.Fact(f"base_{index}", ir.Atom(predicate_names[0], (ir.ConstTerm(f"c{index}"),)))
+        for index in range(base_count)
+    ) + tuple(
+        ir.Fact(f"noise_{index}", ir.Atom(f"Noise{index}", (ir.ConstTerm("c0"),)))
+        for index in range(noise_count)
     )
-    visible_facts = (
-        ir.Fact("base_a", ir.Atom("A", (ir.ConstTerm("c0"),))),
-        ir.Fact("base_a_shifted", ir.Atom("A", (ir.FuncTerm("f", (ir.ConstTerm("c0"),)),))),
-    )
+    if include_shifted_goal:
+        visible_facts += (
+            ir.Fact(
+                "base_shifted",
+                ir.Atom(predicate_names[0], (ir.FuncTerm(function_names[0], (ir.ConstTerm("c0"),)),)),
+            ),
+        )
 
     hidden_bridge = ir.Bridge(
         lemmas=(
             ir.HornClause(
-                name="chain3",
+                name=f"chain{chain_length}",
                 variables=(x,),
-                premises=(ir.Atom("A", (ir.VarTerm(x),)),),
-                conclusion=ir.Atom(
-                    "D",
-                    (ir.FuncTerm("h", (ir.FuncTerm("g", (ir.FuncTerm("f", (ir.VarTerm(x),)),)),)),),
-                ),
+                premises=(ir.Atom(predicate_names[0], (ir.VarTerm(x),)),),
+                conclusion=ir.Atom(predicate_names[-1], (apply_functions(ir.VarTerm(x), function_names),)),
             ),
         )
     )
@@ -117,8 +152,8 @@ def generate_lemma_invention_world(request: WorldGenerationRequest) -> ir.World:
             name=name,
             atoms=(
                 ir.Atom(
-                    "D",
-                    (ir.FuncTerm("h", (ir.FuncTerm("g", (ir.FuncTerm("f", (seed_term,)),)),)),),
+                    predicate_names[-1],
+                    (apply_functions(seed_term, function_names),),
                 ),
             ),
             budget=budget,
@@ -126,10 +161,18 @@ def generate_lemma_invention_world(request: WorldGenerationRequest) -> ir.World:
         )
 
     targets_visible = (make_goal("visible_chain", ir.ConstTerm("c0"), request.proof_budget + 1),)
-    targets_hidden = (
-        make_goal("hidden_chain_base", ir.ConstTerm("c0"), request.proof_budget),
-        make_goal("hidden_chain_shifted", iterate_term("f", ir.ConstTerm("c0"), 1), request.proof_budget),
+    targets_hidden = tuple(
+        make_goal(f"hidden_chain_{index}", ir.ConstTerm(f"c{index}"), request.proof_budget)
+        for index in range(base_count)
     )
+    if include_shifted_goal:
+        targets_hidden += (
+            make_goal(
+                "hidden_chain_shifted",
+                iterate_term(function_names[0], ir.ConstTerm("c0"), 1),
+                request.proof_budget,
+            ),
+        )
 
     baseline = build_closure(
         signature,
@@ -168,6 +211,16 @@ def generate_lemma_invention_world(request: WorldGenerationRequest) -> ir.World:
             "seed": request.seed,
             "max_term_depth": request.max_term_depth,
             "dsl_version": "abw-dsl-v1",
+            **schema_metadata(
+                request.family,
+                {
+                    "chain_length": chain_length,
+                    "base_count": base_count,
+                    "shortcut_profile": shortcut_profile,
+                    "noise_count": noise_count,
+                    "include_shifted_goal": include_shifted_goal,
+                },
+            ),
         },
     )
     check_world(world)

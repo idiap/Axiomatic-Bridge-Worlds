@@ -23,6 +23,7 @@ from abw_core.generator.base import WorldGenerationRequest, register_family, sco
 from abw_core.scorer.weights import NON_ANALOGY_WEIGHTS
 from abw_core.generator.obfuscation import default_world_id
 from abw_core.generator.templates import iterate_term
+from abw_core.generator.variation import schema_metadata, seeded_rng
 from abw_core.prover import build_closure, goal_cost
 from abw_core.typecheck import check_world, extend_signature_with_definitions
 
@@ -35,42 +36,64 @@ def generate_multi_step_world(request: WorldGenerationRequest) -> ir.World:
     introduces staged abstractions that make multi-step hidden goals cheaper.
     """
 
+    rng = seeded_rng(request.family, request.seed)
+    if request.seed == 7:
+        left_names = ("A",)
+        right_names = ("B",)
+        downstream_names = ("C", "K")
+        base_count = 1
+        noise_count = 0
+        goal_depths = tuple(request.hidden_steps)
+    else:
+        left_names = tuple(f"A{i}" for i in range(rng.randint(1, 3)))
+        right_names = tuple(f"B{i}" for i in range(rng.randint(1, 3)))
+        downstream_names = tuple(f"C{i}" for i in range(rng.randint(2, 4)))
+        base_count = rng.randint(1, 2)
+        noise_count = rng.randint(0, 2)
+        available_depths = list(range(2, max(3, request.max_term_depth) + 1))
+        goal_count = min(len(available_depths), rng.randint(2, 3))
+        goal_depths = tuple(sorted(rng.sample(available_depths, goal_count)))
+
     sorts = (ir.Sort("S0"), ir.Sort("S1"), ir.Sort("S2"))
-    constants = (
-        ir.ConstantSymbol("c0", "S0"),
-        ir.ConstantSymbol("d0", "S1"),
+    constants = tuple(ir.ConstantSymbol(f"c{i}", "S0") for i in range(base_count)) + tuple(
+        ir.ConstantSymbol(f"d{i}", "S1") for i in range(base_count)
     )
     functions = (
         ir.FunctionSymbol("f", ("S0",), "S0"),
         ir.FunctionSymbol("g", ("S1",), "S1"),
         ir.FunctionSymbol("h", ("S0", "S1"), "S2"),
     )
-    predicates = (
-        ir.PredicateSymbol("A", ("S0",)),
-        ir.PredicateSymbol("B", ("S1",)),
-        ir.PredicateSymbol("C", ("S2",)),
+    predicates = tuple(ir.PredicateSymbol(name, ("S0",)) for name in left_names) + tuple(
+        ir.PredicateSymbol(name, ("S1",)) for name in right_names
+    ) + tuple(ir.PredicateSymbol(name, ("S2",)) for name in downstream_names) + (
         ir.PredicateSymbol("R", ("S0", "S1")),
-        ir.PredicateSymbol("K", ("S2",)),
-    )
+    ) + tuple(ir.PredicateSymbol(f"Noise{i}", ("S0",)) for i in range(noise_count))
     signature = ir.Signature(sorts=sorts, constants=constants, functions=functions, predicates=predicates)
 
     x = ir.Variable("x", "S0")
     y = ir.Variable("y", "S1")
     z = ir.Variable("z", "S2")
 
-    axioms = (
+    pair_atoms = tuple(ir.Atom(name, (ir.VarTerm(x),)) for name in left_names) + tuple(
+        ir.Atom(name, (ir.VarTerm(y),)) for name in right_names
+    ) + (ir.Atom("R", (ir.VarTerm(x), ir.VarTerm(y))),)
+    axioms = tuple(
         ir.HornClause(
-            name="a_step",
+            name=f"{name.lower()}_step",
             variables=(x,),
-            premises=(ir.Atom("A", (ir.VarTerm(x),)),),
-            conclusion=ir.Atom("A", (ir.FuncTerm("f", (ir.VarTerm(x),)),)),
-        ),
+            premises=(ir.Atom(name, (ir.VarTerm(x),)),),
+            conclusion=ir.Atom(name, (ir.FuncTerm("f", (ir.VarTerm(x),)),)),
+        )
+        for name in left_names
+    ) + tuple(
         ir.HornClause(
-            name="b_step",
+            name=f"{name.lower()}_step",
             variables=(y,),
-            premises=(ir.Atom("B", (ir.VarTerm(y),)),),
-            conclusion=ir.Atom("B", (ir.FuncTerm("g", (ir.VarTerm(y),)),)),
-        ),
+            premises=(ir.Atom(name, (ir.VarTerm(y),)),),
+            conclusion=ir.Atom(name, (ir.FuncTerm("g", (ir.VarTerm(y),)),)),
+        )
+        for name in right_names
+    ) + (
         ir.HornClause(
             name="r_step",
             variables=(x, y),
@@ -80,42 +103,57 @@ def generate_multi_step_world(request: WorldGenerationRequest) -> ir.World:
         ir.HornClause(
             name="construct_c",
             variables=(x, y),
-            premises=(
-                ir.Atom("A", (ir.VarTerm(x),)),
-                ir.Atom("B", (ir.VarTerm(y),)),
-                ir.Atom("R", (ir.VarTerm(x), ir.VarTerm(y))),
-            ),
-            conclusion=ir.Atom("C", (ir.FuncTerm("h", (ir.VarTerm(x), ir.VarTerm(y))),)),
+            premises=pair_atoms,
+            conclusion=ir.Atom(downstream_names[0], (ir.FuncTerm("h", (ir.VarTerm(x), ir.VarTerm(y))),)),
         ),
+    ) + tuple(
         ir.HornClause(
-            name="c_to_k",
+            name=f"{downstream_names[index].lower()}_to_{downstream_names[index + 1].lower()}",
             variables=(z,),
-            premises=(ir.Atom("C", (ir.VarTerm(z),)),),
-            conclusion=ir.Atom("K", (ir.VarTerm(z),)),
-        ),
+            premises=(ir.Atom(downstream_names[index], (ir.VarTerm(z),)),),
+            conclusion=ir.Atom(downstream_names[index + 1], (ir.VarTerm(z),)),
+        )
+        for index in range(len(downstream_names) - 1)
+    ) + tuple(
+        ir.HornClause(
+            name=f"noise_{index}_step",
+            variables=(x,),
+            premises=(ir.Atom(f"Noise{index}", (ir.VarTerm(x),)),),
+            conclusion=ir.Atom(f"Noise{index}", (ir.FuncTerm("f", (ir.VarTerm(x),)),)),
+        )
+        for index in range(noise_count)
     )
     visible_theorems = ()
-    visible_facts = (
-        ir.Fact("base_a", ir.Atom("A", (ir.ConstTerm("c0"),))),
-        ir.Fact("base_b", ir.Atom("B", (ir.ConstTerm("d0"),))),
-        ir.Fact("base_r", ir.Atom("R", (ir.ConstTerm("c0"), ir.ConstTerm("d0")))),
+    visible_facts = tuple(
+        ir.Fact(f"base_{name.lower()}_{index}", ir.Atom(name, (ir.ConstTerm(f"c{index}"),)))
+        for index in range(base_count)
+        for name in left_names
+    ) + tuple(
+        ir.Fact(f"base_{name.lower()}_{index}", ir.Atom(name, (ir.ConstTerm(f"d{index}"),)))
+        for index in range(base_count)
+        for name in right_names
+    ) + tuple(
+        ir.Fact(
+            f"base_r_{index}",
+            ir.Atom("R", (ir.ConstTerm(f"c{index}"), ir.ConstTerm(f"d{index}"))),
+        )
+        for index in range(base_count)
+    ) + tuple(
+        ir.Fact(f"noise_{index}", ir.Atom(f"Noise{index}", (ir.ConstTerm("c0"),)))
+        for index in range(noise_count)
     )
 
     paired_good = ir.Definition(
         name="PairedGood",
         parameters=(x, y),
-        body=(
-            ir.Atom("A", (ir.VarTerm(x),)),
-            ir.Atom("B", (ir.VarTerm(y),)),
-            ir.Atom("R", (ir.VarTerm(x), ir.VarTerm(y))),
-        ),
+        body=pair_atoms,
     )
     constructed_good = ir.Definition(
         name="ConstructedGood",
         parameters=(z,),
         body=(
-            ir.Atom("C", (ir.VarTerm(z),)),
-            ir.Atom("K", (ir.VarTerm(z),)),
+            ir.Atom(downstream_names[0], (ir.VarTerm(z),)),
+            ir.Atom(downstream_names[-1], (ir.VarTerm(z),)),
         ),
     )
     hidden_bridge = ir.Bridge(
@@ -131,10 +169,13 @@ def generate_multi_step_world(request: WorldGenerationRequest) -> ir.World:
                 ),
             ),
             ir.HornClause(
-                name="constructed_is_k",
+                name="constructed_is_final",
                 variables=(x, y),
                 premises=(ir.Atom("PairedGood", (ir.VarTerm(x), ir.VarTerm(y))),),
-                conclusion=ir.Atom("K", (ir.FuncTerm("h", (ir.VarTerm(x), ir.VarTerm(y))),)),
+                conclusion=ir.Atom(
+                    downstream_names[-1],
+                    (ir.FuncTerm("h", (ir.VarTerm(x), ir.VarTerm(y))),),
+                ),
             ),
             ir.HornClause(
                 name="constructed_good_intro",
@@ -157,15 +198,13 @@ def generate_multi_step_world(request: WorldGenerationRequest) -> ir.World:
         right = iterate_term("g", ir.ConstTerm("d0"), steps)
         return ir.Goal(
             name=name,
-            atoms=(ir.Atom("K", (ir.FuncTerm("h", (left, right)),)),),
+            atoms=(ir.Atom(downstream_names[-1], (ir.FuncTerm("h", (left, right)),)),),
             budget=budget,
             description=f"Downstream K property after {steps} synchronized paired steps.",
         )
 
     targets_visible = (make_goal("visible_k_one", 1, request.proof_budget + 1),)
-    targets_hidden = tuple(
-        make_goal(f"hidden_k_{steps}", steps, request.proof_budget) for steps in request.hidden_steps
-    )
+    targets_hidden = tuple(make_goal(f"hidden_k_{steps}", steps, request.proof_budget) for steps in goal_depths)
 
     baseline = build_closure(
         signature,
@@ -205,7 +244,18 @@ def generate_multi_step_world(request: WorldGenerationRequest) -> ir.World:
             "seed": request.seed,
             "max_term_depth": request.max_term_depth,
             "dsl_version": "abw-dsl-v1",
-            "hidden_steps": list(request.hidden_steps),
+            "hidden_steps": list(goal_depths),
+            **schema_metadata(
+                request.family,
+                {
+                    "left_condition_count": len(left_names),
+                    "right_condition_count": len(right_names),
+                    "downstream_chain_length": len(downstream_names),
+                    "base_pair_count": base_count,
+                    "noise_count": noise_count,
+                    "goal_depths": list(goal_depths),
+                },
+            ),
         },
     )
     check_world(world)

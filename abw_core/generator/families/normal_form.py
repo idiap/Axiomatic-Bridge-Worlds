@@ -23,6 +23,7 @@ from abw_core import ir
 from abw_core.generator.base import WorldGenerationRequest, register_family, scoring_config
 from abw_core.scorer.weights import NON_ANALOGY_WEIGHTS
 from abw_core.generator.obfuscation import default_world_id
+from abw_core.generator.variation import schema_metadata, seeded_rng
 from abw_core.prover import build_closure, goal_cost
 from abw_core.typecheck import check_world, extend_signature_with_definitions
 
@@ -35,52 +36,82 @@ def generate_normal_form_world(request: WorldGenerationRequest) -> ir.World:
     in normal form," which then supports downstream reasoning more directly.
     """
 
+    rng = seeded_rng(request.family, request.seed)
+    if request.seed == 7:
+        constructor_names = ("a", "b")
+        constant_names = ("z",)
+        done_names = ("Done",)
+        rewrite_pairs = (("a", "b"), ("b", "a"))
+        nested_normalizers = 1
+    else:
+        constructor_names = ("a", "b", "c", "d")[: rng.randint(2, 4)]
+        constant_names = tuple(f"z{i}" for i in range(rng.randint(1, 3)))
+        done_names = tuple(f"Done{i}" for i in range(rng.randint(1, 2)))
+        offset = rng.randint(1, len(constructor_names) - 1)
+        pair_count = rng.randint(1, len(constructor_names))
+        rewrite_pairs = tuple(
+            (
+                constructor_names[index],
+                constructor_names[(index + offset) % len(constructor_names)],
+            )
+            for index in range(pair_count)
+        )
+        nested_normalizers = rng.randint(1, 2)
+
     sorts = (ir.Sort("T"),)
-    constants = (ir.ConstantSymbol("z", "T"),)
-    functions = (
-        ir.FunctionSymbol("a", ("T",), "T"),
-        ir.FunctionSymbol("b", ("T",), "T"),
-        ir.FunctionSymbol("n", ("T",), "T"),
+    constants = tuple(ir.ConstantSymbol(name, "T") for name in constant_names)
+    functions = tuple(ir.FunctionSymbol(name, ("T",), "T") for name in constructor_names + ("n",))
+    ready_names = tuple(name.replace("Done", "Ready") for name in done_names)
+    marker_names = tuple(name.replace("Done", "Marker") for name in done_names)
+    predicates = tuple(
+        ir.PredicateSymbol(name, ("T",)) for name in done_names + ready_names + marker_names
     )
-    predicates = (ir.PredicateSymbol("Done", ("T",)),)
     signature = ir.Signature(sorts=sorts, constants=constants, functions=functions, predicates=predicates)
 
     x = ir.Variable("x", "T")
 
-    rewrites = (
+    wildcard = ir.VarTerm(ir.Variable("x", "_"))
+    rewrites = tuple(
         ir.RewriteRule(
-            name="r1",
-            lhs=ir.FuncTerm("a", (ir.FuncTerm("b", (ir.VarTerm(ir.Variable("x", "_")),)),)),
-            rhs=ir.FuncTerm("n", (ir.VarTerm(ir.Variable("x", "_")),)),
-        ),
+            name=f"r{index + 1}",
+            lhs=ir.FuncTerm(outer, (ir.FuncTerm(inner, (wildcard,)),)),
+            rhs=ir.FuncTerm("n", (wildcard,)),
+        )
+        for index, (outer, inner) in enumerate(rewrite_pairs)
+    ) + (
         ir.RewriteRule(
-            name="r2",
-            lhs=ir.FuncTerm("b", (ir.FuncTerm("a", (ir.VarTerm(ir.Variable("x", "_")),)),)),
-            rhs=ir.FuncTerm("n", (ir.VarTerm(ir.Variable("x", "_")),)),
-        ),
-        ir.RewriteRule(
-            name="r3",
-            lhs=ir.FuncTerm("n", (ir.FuncTerm("n", (ir.VarTerm(ir.Variable("x", "_")),)),)),
-            rhs=ir.FuncTerm("n", (ir.VarTerm(ir.Variable("x", "_")),)),
+            name="n_idempotent",
+            lhs=ir.FuncTerm("n", (ir.FuncTerm("n", (wildcard,)),)),
+            rhs=ir.FuncTerm("n", (wildcard,)),
         ),
     )
-    axioms = (
+    axioms = tuple(
         ir.HornClause(
-            name="done_n",
+            name=f"{marker_name.lower()}_to_{ready_name.lower()}",
             variables=(x,),
-            premises=(),
-            conclusion=ir.Atom("Done", (ir.FuncTerm("n", (ir.VarTerm(x),)),)),
-        ),
-    )
-    visible_theorems = (
+            premises=(ir.Atom(marker_name, (ir.VarTerm(x),)),),
+            conclusion=ir.Atom(ready_name, (ir.FuncTerm("n", (ir.VarTerm(x),)),)),
+        )
+        for marker_name, ready_name in zip(marker_names, ready_names)
+    ) + tuple(
         ir.HornClause(
-            name="visible_done_ab",
+            name=f"{ready_name.lower()}_to_{done_name.lower()}",
             variables=(x,),
-            premises=(),
-            conclusion=ir.Atom("Done", (ir.FuncTerm("a", (ir.FuncTerm("b", (ir.VarTerm(x),)),)),)),
-        ),
+            premises=(ir.Atom(ready_name, (ir.VarTerm(x),)),),
+            conclusion=ir.Atom(done_name, (ir.VarTerm(x),)),
+        )
+        for ready_name, done_name in zip(ready_names, done_names)
     )
-    visible_facts = ()
+    visible_outer, visible_inner = rewrite_pairs[0]
+    visible_theorems = ()
+    visible_facts = tuple(
+        ir.Fact(
+            f"base_{marker_name.lower()}_{index}",
+            ir.Atom(marker_name, (ir.ConstTerm(constant),)),
+        )
+        for index, constant in enumerate(constant_names)
+        for marker_name in marker_names
+    )
 
     normal_definition = ir.Definition(
         name="Normal",
@@ -89,38 +120,50 @@ def generate_normal_form_world(request: WorldGenerationRequest) -> ir.World:
     )
     hidden_bridge = ir.Bridge(
         definitions=(normal_definition,),
-        lemmas=(
+        lemmas=tuple(
             ir.HornClause(
-                name="done_after_normalize",
+                name=f"{done_name.lower()}_normal_shortcut",
                 variables=(x,),
-                premises=(ir.Atom("Normal", (ir.VarTerm(x),)),),
-                conclusion=ir.Atom("Done", (ir.VarTerm(x),)),
-            ),
+                premises=(ir.Atom(marker_name, (ir.VarTerm(x),)),),
+                conclusion=ir.Atom(done_name, (ir.FuncTerm("n", (ir.VarTerm(x),)),)),
+            )
+            for done_name, marker_name in zip(done_names, marker_names)
         ),
     )
 
     targets_visible = (
         ir.Goal(
             name="visible_done_ab_z",
-            atoms=(ir.Atom("Done", (ir.FuncTerm("a", (ir.FuncTerm("b", (ir.ConstTerm("z"),)),)),)),),
+            atoms=(
+                ir.Atom(
+                    done_names[0],
+                    (
+                        ir.FuncTerm(
+                            visible_outer,
+                            (ir.FuncTerm(visible_inner, (ir.ConstTerm(constant_names[0]),)),),
+                        ),
+                    ),
+                ),
+            ),
             budget=request.proof_budget,
             description="A single reducible term already known to finish.",
         ),
     )
-    targets_hidden = (
-        ir.Goal(
-            name="hidden_done_ab_nested",
-            atoms=(ir.Atom("Done", (ir.FuncTerm("n", (ir.FuncTerm("a", (ir.FuncTerm("b", (ir.ConstTerm("z"),)),)),)),)),),
-            budget=request.proof_budget,
-            description="Nested reducible term that collapses to a normal form.",
-        ),
-        ir.Goal(
-            name="hidden_done_ba",
-            atoms=(ir.Atom("Done", (ir.FuncTerm("b", (ir.FuncTerm("a", (ir.ConstTerm("z"),)),)),)),),
-            budget=request.proof_budget,
-            description="Symmetric reducible term that lands in the same normal family.",
-        ),
-    )
+    targets_hidden_list: list[ir.Goal] = []
+    for pair_index, (outer, inner) in enumerate(rewrite_pairs):
+        constant = constant_names[pair_index % len(constant_names)]
+        term: ir.Term = ir.FuncTerm(outer, (ir.FuncTerm(inner, (ir.ConstTerm(constant),)),))
+        for _ in range(nested_normalizers - 1):
+            term = ir.FuncTerm("n", (term,))
+        targets_hidden_list.append(
+            ir.Goal(
+                name=f"hidden_done_pair_{pair_index}",
+                atoms=(ir.Atom(done_names[pair_index % len(done_names)], (term,)),),
+                budget=request.proof_budget,
+                description="Nested reducible term that collapses to a normal form.",
+            )
+        )
+    targets_hidden = tuple(targets_hidden_list)
 
     baseline = build_closure(
         signature,
@@ -163,6 +206,16 @@ def generate_normal_form_world(request: WorldGenerationRequest) -> ir.World:
             "seed": request.seed,
             "max_term_depth": request.max_term_depth,
             "dsl_version": "abw-dsl-v1",
+            **schema_metadata(
+                request.family,
+                {
+                    "constructor_count": len(constructor_names),
+                    "constant_count": len(constant_names),
+                    "done_predicate_count": len(done_names),
+                    "rewrite_pairs": [list(pair) for pair in rewrite_pairs],
+                    "nested_normalizers": nested_normalizers,
+                },
+            ),
         },
     )
     check_world(world)

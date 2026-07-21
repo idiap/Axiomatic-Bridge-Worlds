@@ -13,6 +13,7 @@ working tree, but they are intentionally not part of this public script surface.
 
 | File | Purpose |
 | --- | --- |
+| `audit_dataset_diversity.py` | Audit repeated schemas, repeated public tasks, and split overlap. |
 | `build_paired_difficulty_dataset.py` | Build paired C0-C6 difficulty-shape datasets from generated source worlds. |
 | `difficulty_shape_summary.py` | Summarize benchmark JSON outputs by C0-C6 difficulty shape and family. |
 | `export_public_dataset.py` | Export a packaged dataset with private artifacts stripped out for public-only evaluation. |

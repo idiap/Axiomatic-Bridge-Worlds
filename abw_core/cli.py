@@ -21,6 +21,11 @@ from abw_core.benchmark_reporting import DEFAULT_COMPILE_COMMAND, render_benchma
 from abw_core.config import load_config, manifest_payload
 from abw_core.dsl import parse_document
 from abw_core.generator import WorldGenerationRequest, generate_world
+from abw_core.generator.variation import (
+    GENERATOR_VERSION,
+    benchmark_content_fingerprint,
+    public_content_fingerprint,
+)
 from abw_core.packager import export_public_dataset, load_world, package_world, validate_package
 from abw_core.prover import BackendConfig, find_goal_countermodel_with_backend
 from abw_core.scorer import evaluate_candidate, load_candidate_text
@@ -322,35 +327,79 @@ def _cmd_generate_dataset(args: argparse.Namespace, parser: argparse.ArgumentPar
     seed = config.start_seed
     family_count = len(config.families)
     family_index = 0
+    seen_schema: dict[str, set[str]] = {family: set() for family in config.families}
+    seen_content: dict[str, set[str]] = {family: set() for family in config.families}
+    seen_public: dict[str, set[str]] = {family: set() for family in config.families}
+    split_schema: dict[str, dict[str, set[str]]] = {}
+    duplicate_resamples = 0
     for split, count in config.splits.items():
         split_counts[split] = count
+        split_schema[split] = {family: set() for family in config.families}
         if config.split_start_seeds and split in config.split_start_seeds:
             seed = config.split_start_seeds[split]
         for index in range(count):
             family = config.families[family_index % family_count]
             world_id = f"abw_{split}_{index:04d}"
-            request = WorldGenerationRequest(
-                family=family,
-                seed=seed,
-                world_id=world_id,
-                max_term_depth=config.max_term_depth,
-                proof_budget=config.proof_budget,
-                hidden_steps=config.hidden_steps,
-                include_distractors=config.include_distractors,
-                interactive_enabled=config.interactive_enabled,
-                interactive_query_budget=config.interactive_query_budget,
-                interactive_countermodels=config.interactive_countermodels,
-                prover_backend_name=config.prover_backend_name,
-                prover_backend_command=config.prover_backend_command,
-            )
-            world = generate_world(request)
+            for _attempt in range(10_000):
+                request = WorldGenerationRequest(
+                    family=family,
+                    seed=seed,
+                    world_id=world_id,
+                    max_term_depth=config.max_term_depth,
+                    proof_budget=config.proof_budget,
+                    hidden_steps=config.hidden_steps,
+                    include_distractors=config.include_distractors,
+                    interactive_enabled=config.interactive_enabled,
+                    interactive_query_budget=config.interactive_query_budget,
+                    interactive_countermodels=config.interactive_countermodels,
+                    prover_backend_name=config.prover_backend_name,
+                    prover_backend_command=config.prover_backend_command,
+                )
+                world = generate_world(request)
+                schema_fingerprint = str(world.metadata.get("schema_fingerprint", ""))
+                content_fingerprint = benchmark_content_fingerprint(world)
+                public_fingerprint = public_content_fingerprint(world)
+                if not schema_fingerprint:
+                    raise ValueError(f"Generated {family} world is missing schema_fingerprint metadata.")
+                if (
+                    schema_fingerprint not in seen_schema[family]
+                    and content_fingerprint not in seen_content[family]
+                    and public_fingerprint not in seen_public[family]
+                ):
+                    break
+                duplicate_resamples += 1
+                seed += 1
+            else:
+                raise RuntimeError(f"Could not find a unique {family} schema after 10,000 seeds.")
+
+            world.metadata["content_fingerprint"] = content_fingerprint
+            world.metadata["public_content_fingerprint"] = public_fingerprint
             package_world(world, output_root / split / family / world_id)
+            seen_schema[family].add(schema_fingerprint)
+            seen_content[family].add(content_fingerprint)
+            seen_public[family].add(public_fingerprint)
+            split_schema[split][family].add(schema_fingerprint)
             seed += 1
             family_index += 1
-    (output_root / "manifest.json").write_text(
-        json.dumps(manifest_payload(config, split_counts, output_dir=output_root), indent=2) + "\n",
-        encoding="utf-8",
-    )
+    manifest = manifest_payload(config, split_counts, output_dir=output_root)
+    split_names = list(split_schema)
+    overlap_by_family = {
+        family: len(
+            set.intersection(*(split_schema[split][family] for split in split_names))
+            if len(split_names) > 1
+            else set()
+        )
+        for family in config.families
+    }
+    manifest["diversity"] = {
+        "generator_version": GENERATOR_VERSION,
+        "schema_unique_per_family": {family: len(values) for family, values in seen_schema.items()},
+        "content_unique_per_family": {family: len(values) for family, values in seen_content.items()},
+        "public_content_unique_per_family": {family: len(values) for family, values in seen_public.items()},
+        "schema_overlap_across_splits_per_family": overlap_by_family,
+        "duplicate_seed_resamples": duplicate_resamples,
+    }
+    (output_root / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"output": str(output_root), "manifest": str(output_root / 'manifest.json')}, indent=2))
     return 0
 

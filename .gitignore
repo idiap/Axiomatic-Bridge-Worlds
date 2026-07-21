@@ -47,6 +47,7 @@ datasets/**
 !dataset/*.zip
 configs/*matrix*.json
 configs/paper_core_*.yaml
+!configs/paper_core_seeded_v2.yaml
 configs/*few_shot_exemplars*.json
 configs/*technique_conditions*.json
 abw_core/generator/families/s*_*.py
