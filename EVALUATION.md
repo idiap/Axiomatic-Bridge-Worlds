@@ -27,7 +27,9 @@ export ABW_MODEL_MAX_TOKENS=8000
 
 `ABW_MODEL_API_KEY` may be omitted for an unauthenticated local endpoint. A
 custom adapter may be substituted anywhere below if it reads one ABW request
-from stdin and writes a JSON object containing `candidate` to stdout.
+from stdin and writes a JSON object containing `candidate` to stdout. When the
+request declares an `evaluation` contract, the adapter must echo its
+`prompt_condition` and `exemplar_bank` in response `metadata`.
 
 ## Stage 1
 
@@ -44,9 +46,7 @@ uv run python scripts/run_experiment.py \
   --target-command uv \
   --target-command run \
   --target-command python \
-  --target-command scripts/model_target.py \
-  --target-command=--prompt-condition \
-  --target-command zero_shot_formal_direct
+  --target-command scripts/model_target.py
 ```
 
 Compare the aggregate `summary.primary_score` values in the generated JSON
@@ -62,9 +62,10 @@ Use `--split test_public --limit 350`. The three public contracts are:
 | Natural-Language Direct (NLD) | `zero_shot_natural_language_direct` | controlled NL, deterministically converted to ABW DSL |
 | Cross-Track (CT) | `zero_shot_cross_track_nl_to_formal` | ABW DSL from NL input |
 
-Run the Stage 1 command with the selected condition supplied both to
-`run_experiment.py` and to `model_target.py`. Give each condition a distinct
-`--model-label` or explicit `--output` path.
+Supply the selected condition once to `run_experiment.py`. The runner forwards
+it in every benchmark request and verifies the adapter's acknowledgement before
+scoring. Give each condition a distinct `--model-label` or explicit `--output`
+path.
 
 ## Stage 2 Few-Shot
 
@@ -77,7 +78,7 @@ worlds come only from `test_public`. The committed banks are:
 | NLD | `family_few_shot_natural_language_direct` | `configs/natural_language_direct_few_shot_exemplars_seeded_v2.json` |
 | CT | `family_few_shot_cross_track_nl_to_formal` | `configs/cross_track_few_shot_exemplars_seeded_v2.json` |
 
-Pass the condition and bank to the adapter:
+Pass the condition and bank to the runner:
 
 ```bash
 uv run python scripts/run_experiment.py \
@@ -90,11 +91,7 @@ uv run python scripts/run_experiment.py \
   --target-command uv \
   --target-command run \
   --target-command python \
-  --target-command scripts/model_target.py \
-  --target-command=--prompt-condition \
-  --target-command family_few_shot_formal_direct \
-  --target-command=--exemplar-bank \
-  --target-command configs/formal_direct_few_shot_exemplars_seeded_v2.json
+  --target-command scripts/model_target.py
 ```
 
 Rebuild a bank with `build_few_shot_exemplar_bank.py`; keep `--split dev` and
@@ -110,6 +107,7 @@ command used above.
 ```bash
 uv run python scripts/robustness_plan.py \
   --base-dataset-root dataset/abw-formal-nl-core \
+  --prompt-condition zero_shot_formal_direct \
   --target-command uv \
   --target-command run \
   --target-command python \
@@ -117,7 +115,8 @@ uv run python scripts/robustness_plan.py \
 ```
 
 Build the paired C0-C6 dataset from the same `test_public` source and evaluate
-the resulting root with `run_experiment.py`:
+the resulting root with `run_experiment.py` using the intended
+`--prompt-condition`:
 
 ```bash
 uv run python scripts/build_paired_difficulty_dataset.py --overwrite

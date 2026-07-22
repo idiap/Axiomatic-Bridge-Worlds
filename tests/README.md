@@ -1,17 +1,17 @@
 # Tests
 
-This directory holds regression coverage for the public ABW runtime contract.
+This directory holds focused regression coverage for the public ABW evaluation
+contract.
 
 ## Test Areas
 
 | Path | Purpose |
 | --- | --- |
-| `unit/` | Narrow behavior checks for core runtime modules and repository contracts. |
-| `integration/` | End-to-end command and workflow checks. |
+| `unit/` | Generation, scoring, prompt contracts, few-shot banks, robustness, C0-C6, and retries. |
+| `integration/` | End-to-end dataset, scoring, benchmark, and experiment-runner checks. |
 
 ## Editing Guidance
 
-- Put the narrowest useful test in the narrowest useful layer.
+- Keep tests tied to a public evaluation workflow or a scoring dependency.
 - Keep fixtures deterministic and easy to inspect.
-- When docs or repository-surface contracts matter to public use, it is fine to
-  add light regression tests for those too.
+- Avoid broad coverage-only tests and paper/report-generation tests.

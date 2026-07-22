@@ -108,3 +108,69 @@ def test_run_benchmark_records_null_candidate_text_for_invocation_failure(tmp_pa
     assert record["candidate_excerpt"] is None
     assert record["candidate_sha256"] is None
     assert record["candidate_size_chars"] == 0
+
+
+def test_run_benchmark_forwards_and_verifies_evaluation_contract(tmp_path: Path) -> None:
+    dataset_root = _packaged_dataset(tmp_path)
+    candidate_path = (Path.cwd() / "examples" / "predicate_invention" / "gold_candidate.abw").resolve()
+    prompt_condition = "zero_shot_cross_track_nl_to_formal"
+
+    report = run_benchmark(
+        dataset_root,
+        target_command=(
+            sys.executable,
+            "-c",
+            (
+                "import json,sys; from pathlib import Path; request=json.load(sys.stdin); "
+                f"candidate=Path(r'{candidate_path}').read_text(encoding='utf-8'); "
+                "json.dump({'candidate': candidate, 'metadata': request['evaluation']}, sys.stdout)"
+            ),
+        ),
+        prompt_condition=prompt_condition,
+    )
+
+    assert report["target"]["prompt_condition"] == prompt_condition
+    assert report["summary"]["contract_failures"] == 0
+    assert report["worlds"][0]["status"] == "scored"
+    assert report["worlds"][0]["target"]["response_metadata"] == {
+        "prompt_condition": prompt_condition,
+        "exemplar_bank": None,
+    }
+
+
+def test_run_benchmark_rejects_adapter_condition_mismatch(tmp_path: Path) -> None:
+    dataset_root = _packaged_dataset(tmp_path)
+    candidate_path = (Path.cwd() / "examples" / "predicate_invention" / "gold_candidate.abw").resolve()
+
+    report = run_benchmark(
+        dataset_root,
+        target_command=(
+            sys.executable,
+            "-c",
+            (
+                "import json,sys; from pathlib import Path; json.load(sys.stdin); "
+                f"candidate=Path(r'{candidate_path}').read_text(encoding='utf-8'); "
+                "json.dump({'candidate': candidate, 'metadata': "
+                "{'prompt_condition': 'zero_shot_formal_direct', 'exemplar_bank': None}}, sys.stdout)"
+            ),
+        ),
+        prompt_condition="zero_shot_cross_track_nl_to_formal",
+    )
+
+    record = report["worlds"][0]
+    assert record["status"] == "contract_failed"
+    assert record["score"]["metrics"]["total_score"] == 0.0
+    assert report["summary"]["completed"] == 0
+    assert report["summary"]["contract_failures"] == 1
+    assert "expected 'zero_shot_cross_track_nl_to_formal'" in record["integration_error"]
+
+
+def test_run_benchmark_rejects_exemplar_bank_without_condition(tmp_path: Path) -> None:
+    dataset_root = _packaged_dataset(tmp_path)
+
+    with pytest.raises(ValueError, match="requires a declared prompt condition"):
+        run_benchmark(
+            dataset_root,
+            target_command=(sys.executable, "-c", "pass"),
+            exemplar_bank="configs/examples.json",
+        )

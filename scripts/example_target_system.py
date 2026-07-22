@@ -67,6 +67,8 @@ def main() -> int:
     """Read one benchmark request and emit one candidate response."""
 
     payload = json.load(sys.stdin)
+    evaluation = payload.get("evaluation")
+    evaluation = evaluation if isinstance(evaluation, dict) else {}
     family = str(payload["family"])
     signature_path = Path(payload["public_artifacts"]["formal"]["signature"])
     world_root = signature_path.parent.parent
@@ -77,6 +79,8 @@ def main() -> int:
             "adapter": "example_private_oracle_fixture",
             "family": family,
             "candidate_source": "packaged private bridge with hidden names replaced",
+            "prompt_condition": evaluation.get("prompt_condition"),
+            "exemplar_bank": evaluation.get("exemplar_bank"),
         },
     }
     json.dump(response, sys.stdout)

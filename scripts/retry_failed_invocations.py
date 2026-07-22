@@ -110,6 +110,21 @@ def _target_timeout(report: Mapping[str, Any], override: float | None) -> float:
     return 900.0
 
 
+def _target_evaluation_contract(report: Mapping[str, Any]) -> tuple[str | None, str | None]:
+    """Recover the original condition contract for a failed-world retry."""
+
+    target = report.get("target")
+    if not isinstance(target, Mapping):
+        return None, None
+    prompt_condition = target.get("prompt_condition")
+    exemplar_bank = target.get("exemplar_bank")
+    if prompt_condition is not None and not isinstance(prompt_condition, str):
+        raise ValueError("Report target.prompt_condition must be a string or null")
+    if exemplar_bank is not None and not isinstance(exemplar_bank, str):
+        raise ValueError("Report target.exemplar_bank must be a string or null")
+    return prompt_condition, exemplar_bank
+
+
 def _manifest_path_for_report(report_path: Path) -> Path:
     name = report_path.name
     if name.endswith("_results.json"):
@@ -174,6 +189,7 @@ def retry_report(
     if target_context_tokens is not None:
         command = _set_command_option(command, "--context-tokens", str(target_context_tokens))
     timeout = _target_timeout(report, timeout_seconds)
+    prompt_condition, exemplar_bank = _target_evaluation_contract(report)
     if dry_run:
         result["world_ids"] = [records[index].get("world_id") for index in failed_indices if isinstance(records[index], Mapping)]
         return result
@@ -210,6 +226,8 @@ def retry_report(
             world_root,
             target_command=command,
             timeout_seconds=timeout,
+            prompt_condition=prompt_condition,
+            exemplar_bank=exemplar_bank,
         )
         retry_records = retry.get("worlds", [])
         if not isinstance(retry_records, list) or len(retry_records) != 1:

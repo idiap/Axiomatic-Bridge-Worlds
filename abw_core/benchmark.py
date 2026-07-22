@@ -215,7 +215,12 @@ def _public_artifacts(world_root: Path) -> dict[str, dict[str, str]]:
     }
 
 
-def _request_payload(world: BenchmarkWorldRef) -> dict[str, Any]:
+def _request_payload(
+    world: BenchmarkWorldRef,
+    *,
+    prompt_condition: str | None = None,
+    exemplar_bank: str | None = None,
+) -> dict[str, Any]:
     """Assemble the protocol payload sent to one target-system invocation.
 
     The payload is intentionally self-describing: it includes protocol version,
@@ -230,6 +235,10 @@ def _request_payload(world: BenchmarkWorldRef) -> dict[str, Any]:
         "world_id": world.world_id,
         "split": world.split,
         "family": world.family,
+        "evaluation": {
+            "prompt_condition": prompt_condition,
+            "exemplar_bank": exemplar_bank,
+        },
         "public_artifacts": _public_artifacts(world.root),
         "metadata": metadata,
         "expected_output": {
@@ -292,11 +301,40 @@ def _decode_target_output(stdout_text: str) -> tuple[str | None, Any, str | None
     return candidate, decoded.get("metadata"), None
 
 
+def _evaluation_contract_error(
+    response_metadata: Any,
+    *,
+    prompt_condition: str | None,
+    exemplar_bank: str | None,
+) -> str | None:
+    """Require an adapter to acknowledge any declared evaluation contract."""
+
+    if prompt_condition is None:
+        return None
+    if not isinstance(response_metadata, dict):
+        return "Target response metadata did not acknowledge the declared prompt condition."
+    acknowledged_condition = response_metadata.get("prompt_condition")
+    if acknowledged_condition != prompt_condition:
+        return (
+            "Target acknowledged prompt condition "
+            f"{acknowledged_condition!r}, expected {prompt_condition!r}."
+        )
+    acknowledged_bank = response_metadata.get("exemplar_bank")
+    if acknowledged_bank != exemplar_bank:
+        return (
+            "Target acknowledged exemplar bank "
+            f"{acknowledged_bank!r}, expected {exemplar_bank!r}."
+        )
+    return None
+
+
 def _invoke_target(
     world: BenchmarkWorldRef,
     *,
     target_command: Sequence[str],
     timeout_seconds: float,
+    prompt_condition: str | None = None,
+    exemplar_bank: str | None = None,
 ) -> TargetInvocationResult:
     """Run the evaluated system on one public benchmark instance.
 
@@ -306,7 +344,13 @@ def _invoke_target(
     typed result object.
     """
 
-    request = json.dumps(_request_payload(world))
+    request = json.dumps(
+        _request_payload(
+            world,
+            prompt_condition=prompt_condition,
+            exemplar_bank=exemplar_bank,
+        )
+    )
     started = time.monotonic()
     try:
         completed = subprocess.run(
@@ -507,6 +551,7 @@ def _aggregate_records(records: Sequence[dict[str, Any]]) -> dict[str, Any]:
     durations = [float(record["target"]["duration_seconds"]) for record in records]
     completed = sum(1 for record in records if record["status"] == "scored")
     failed_invocations = sum(1 for record in records if record["status"] == "invocation_failed")
+    contract_failures = sum(1 for record in records if record["status"] == "contract_failed")
     scoring_failures = sum(1 for record in records if record["status"] == "scoring_failed")
     valid_submissions = sum(1 for record in records if bool(record["score"]["valid"]))
     invalid_submissions = completed - valid_submissions
@@ -516,6 +561,7 @@ def _aggregate_records(records: Sequence[dict[str, Any]]) -> dict[str, Any]:
         "attempted": count,
         "completed": completed,
         "failed_invocations": failed_invocations,
+        "contract_failures": contract_failures,
         "scoring_failures": scoring_failures,
         "valid_submissions": valid_submissions,
         "invalid_submissions": invalid_submissions,
@@ -554,6 +600,8 @@ def run_benchmark(
     world_id_contains: str | None = None,
     limit: int | None = None,
     timeout_seconds: float = 60.0,
+    prompt_condition: str | None = None,
+    exemplar_bank: str | None = None,
     backend_name: str | None = None,
     backend_command: Sequence[str] = (),
     output_path: str | Path | None = None,
@@ -566,6 +614,8 @@ def run_benchmark(
     result object that can be serialized directly as JSON.
     """
 
+    if exemplar_bank is not None and prompt_condition is None:
+        raise ValueError("An exemplar bank requires a declared prompt condition.")
     root = Path(dataset_root).resolve()
     worlds = discover_worlds(
         root,
@@ -582,10 +632,21 @@ def run_benchmark(
             world,
             target_command=target_command,
             timeout_seconds=timeout_seconds,
+            prompt_condition=prompt_condition,
+            exemplar_bank=exemplar_bank,
         )
         integration_error = invocation.error
         status = "invocation_failed"
-        if invocation.candidate_text is not None:
+        contract_error = _evaluation_contract_error(
+            invocation.response_metadata,
+            prompt_condition=prompt_condition,
+            exemplar_bank=exemplar_bank,
+        )
+        if invocation.candidate_text is not None and contract_error is not None:
+            integration_error = contract_error
+            score = _blank_score(contract_error)
+            status = "contract_failed"
+        elif invocation.candidate_text is not None:
             try:
                 score = evaluate_candidate(
                     world.root,
@@ -640,6 +701,8 @@ def run_benchmark(
         "target": {
             "command": list(target_command),
             "timeout_seconds": timeout_seconds,
+            "prompt_condition": prompt_condition,
+            "exemplar_bank": exemplar_bank,
         },
         "scoring": {
             "backend_override": {

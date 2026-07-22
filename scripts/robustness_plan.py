@@ -78,6 +78,8 @@ def _benchmark_command(
     limit: int | None,
     prover_backend: str | None,
     backend_command: Sequence[str],
+    prompt_condition: str | None,
+    exemplar_bank: str | None,
 ) -> list[str]:
     command = [
         "python",
@@ -97,6 +99,10 @@ def _benchmark_command(
     ]
     if limit is not None:
         command.extend(["--limit", str(limit)])
+    if prompt_condition:
+        command.extend(["--prompt-condition", prompt_condition])
+    if exemplar_bank:
+        command.extend(["--exemplar-bank", exemplar_bank])
     if prover_backend:
         command.extend(["--prover-backend", prover_backend])
     command.extend(f"--backend-command={token}" for token in backend_command)
@@ -116,6 +122,8 @@ def _run_entry(
     limit_per_family: int | None,
     prover_backend: str | None,
     backend_command: Sequence[str],
+    prompt_condition: str | None,
+    exemplar_bank: str | None,
     perturbation: str | None = None,
 ) -> dict[str, Any]:
     stem_parts = [role]
@@ -133,6 +141,8 @@ def _run_entry(
         limit=limit_per_family,
         prover_backend=prover_backend,
         backend_command=backend_command,
+        prompt_condition=prompt_condition,
+        exemplar_bank=exemplar_bank,
     )
     return {
         "role": role,
@@ -160,11 +170,15 @@ def build_robustness_plan(
     limit_per_family: int | None,
     prover_backend: str | None = None,
     backend_command: Sequence[str] = (),
+    prompt_condition: str | None = None,
+    exemplar_bank: str | None = None,
 ) -> dict[str, Any]:
     """Return a generic paired robustness run plan."""
 
     if not target_command:
         raise ValueError("target_command must contain at least one command token.")
+    if exemplar_bank is not None and prompt_condition is None:
+        raise ValueError("An exemplar bank requires a declared prompt condition.")
     unknown_families = sorted(set(families) - set(PAPER_FAMILIES))
     if unknown_families:
         raise ValueError(f"Unsupported family in robustness plan: {', '.join(unknown_families)}.")
@@ -196,6 +210,8 @@ def build_robustness_plan(
             limit_per_family=limit_per_family,
             prover_backend=prover_backend,
             backend_command=backend_command,
+            prompt_condition=prompt_condition,
+            exemplar_bank=exemplar_bank,
         )
         for family in families
     ]
@@ -212,6 +228,8 @@ def build_robustness_plan(
             limit_per_family=limit_per_family,
             prover_backend=prover_backend,
             backend_command=backend_command,
+            prompt_condition=prompt_condition,
+            exemplar_bank=exemplar_bank,
         )
         for perturbation in perturbations
         for family in families
@@ -225,6 +243,8 @@ def build_robustness_plan(
         "families": list(families),
         "perturbations": list(perturbations),
         "target_command": list(target_command),
+        "prompt_condition": prompt_condition,
+        "exemplar_bank": exemplar_bank,
         "timeout_seconds": timeout_seconds,
         "limit_per_family": limit_per_family,
         "scoring_backend": {
@@ -255,6 +275,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--target-command", action="append", required=True, default=[])
     parser.add_argument("--timeout-seconds", type=float, default=120.0)
     parser.add_argument("--limit-per-family", type=int)
+    parser.add_argument("--prompt-condition")
+    parser.add_argument("--exemplar-bank")
     parser.add_argument("--prover-backend")
     parser.add_argument("--backend-command", action="append", default=[])
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
@@ -277,6 +299,8 @@ def main(argv: list[str] | None = None) -> int:
         limit_per_family=args.limit_per_family,
         prover_backend=args.prover_backend,
         backend_command=tuple(args.backend_command),
+        prompt_condition=args.prompt_condition,
+        exemplar_bank=args.exemplar_bank,
     )
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)

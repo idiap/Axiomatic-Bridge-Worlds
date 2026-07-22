@@ -3,6 +3,7 @@
 # SPDX-FileContributor: Andre Freitas <andre.freitas@idiap.ch>
 # SPDX-FileContributor: Margarita Sharkova <margarita.sharkova@idiap.ch>
 # Neuro-symbolic AI Group
+#
 # SPDX-License-Identifier: MIT
 
 """Extract the release archive to the canonical seeded-v2 runner path."""

@@ -13,9 +13,9 @@ dataset through the benchmark protocol, then writes JSON results and a
 manifest describing the run. Works for any prompt condition (formal direct,
 natural-language direct, or cross-track NL-to-formal) and any target adapter
 command supplied via `--target-command` — the script does not hard-code a
-model, provider, or prompt condition. `--prompt-condition` and
-`--exemplar-bank` are recorded as run metadata only; if your adapter needs to
-know them, pass them as part of `--target-command`.
+model or provider. The declared `--prompt-condition` and `--exemplar-bank` are
+forwarded through the benchmark request, and the adapter must acknowledge the
+same values in its response metadata before the candidate can be scored.
 """
 
 from __future__ import annotations
@@ -79,10 +79,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--prompt-condition",
         default="zero_shot_formal_direct",
-        help="Free-text run label recorded in the manifest and used for the output directory, "
+        help="Evaluation condition forwarded to the target adapter, verified, and recorded, "
         "e.g. zero_shot_cross_track_nl_to_formal.",
     )
-    parser.add_argument("--exemplar-bank", help="Optional exemplar-bank path recorded in the manifest.")
+    parser.add_argument("--exemplar-bank", help="Optional exemplar-bank path forwarded, verified, and recorded.")
     return parser
 
 
@@ -125,6 +125,41 @@ def _git_commit() -> str | None:
 
 def _safe_experiment_fragment(value: str) -> str:
     return value.replace(":", "_").replace("/", "_").replace("-", "_").replace(".", "_")
+
+
+def _target_option_values(command: tuple[str, ...], option: str) -> tuple[str, ...]:
+    """Return every value explicitly supplied for one target-adapter option."""
+
+    values: list[str] = []
+    for index, token in enumerate(command):
+        if token == option and index + 1 < len(command):
+            values.append(command[index + 1])
+        elif token.startswith(f"{option}="):
+            values.append(token.split("=", 1)[1])
+    return tuple(values)
+
+
+def _target_contract_errors(
+    command: tuple[str, ...],
+    *,
+    prompt_condition: str,
+    exemplar_bank: str | None,
+) -> list[str]:
+    """Reject legacy duplicate adapter flags that contradict the run contract."""
+
+    errors: list[str] = []
+    expected = {
+        "--prompt-condition": prompt_condition,
+        "--exemplar-bank": exemplar_bank,
+    }
+    for option, expected_value in expected.items():
+        for actual_value in _target_option_values(command, option):
+            if actual_value != expected_value:
+                errors.append(
+                    f"Target command {option}={actual_value!r} conflicts with "
+                    f"the experiment value {expected_value!r}."
+                )
+    return errors
 
 
 def _write_manifest(
@@ -178,6 +213,14 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     dataset_root = Path(args.dataset_root)
     target = tuple(args.target_command)
+    contract_errors = _target_contract_errors(
+        target,
+        prompt_condition=args.prompt_condition,
+        exemplar_bank=args.exemplar_bank,
+    )
+    if contract_errors:
+        print(json.dumps({"evaluation_contract_errors": contract_errors}, indent=2), file=sys.stderr)
+        return 2
     track = PROMPT_CONDITION_TO_TRACK.get(args.prompt_condition, args.prompt_condition)
     model_fragment = _safe_experiment_fragment(args.model_label)
     experiment_id = f"abw_{track}_{model_fragment}"
@@ -210,6 +253,8 @@ def main(argv: list[str] | None = None) -> int:
         world_id_contains=args.world_id_contains,
         limit=args.limit,
         timeout_seconds=args.timeout_seconds,
+        prompt_condition=args.prompt_condition,
+        exemplar_bank=args.exemplar_bank,
         output_path=results_path,
     )
 
@@ -239,7 +284,7 @@ def main(argv: list[str] | None = None) -> int:
     payload["manifest"] = str(manifest_path)
     payload["experiment_id"] = manifest["experiment_id"]
     print(json.dumps(payload, indent=2))
-    return 0
+    return 1 if int(results["summary"].get("contract_failures", 0)) else 0
 
 
 if __name__ == "__main__":

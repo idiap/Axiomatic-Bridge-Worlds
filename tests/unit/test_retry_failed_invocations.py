@@ -31,7 +31,12 @@ def test_retry_report_checkpoints_each_completed_world(tmp_path: Path, monkeypat
     report_path.write_text(
         json.dumps(
             {
-                "target": {"command": ["dummy-target"], "timeout_seconds": 30.0},
+                "target": {
+                    "command": ["dummy-target"],
+                    "timeout_seconds": 30.0,
+                    "prompt_condition": "family_few_shot_cross_track_nl_to_formal",
+                    "exemplar_bank": "configs/ct.json",
+                },
                 "worlds": [_record(path, status="invocation_failed") for path in world_roots],
             }
         ),
@@ -39,9 +44,11 @@ def test_retry_report_checkpoints_each_completed_world(tmp_path: Path, monkeypat
     )
     calls = 0
 
-    def fake_run_benchmark(world_root: str, **_kwargs) -> dict[str, object]:
+    def fake_run_benchmark(world_root: str, **kwargs) -> dict[str, object]:
         nonlocal calls
         calls += 1
+        assert kwargs["prompt_condition"] == "family_few_shot_cross_track_nl_to_formal"
+        assert kwargs["exemplar_bank"] == "configs/ct.json"
         if calls == 2:
             checkpoint = json.loads(report_path.read_text(encoding="utf-8"))
             assert [record["status"] for record in checkpoint["worlds"]] == ["scored", "invocation_failed"]

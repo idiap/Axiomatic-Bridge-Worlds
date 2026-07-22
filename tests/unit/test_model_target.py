@@ -17,6 +17,8 @@ from pathlib import Path
 import sys
 from typing import Any
 
+import pytest
+
 
 SCRIPT_PATH = Path(__file__).resolve().parents[2] / "scripts" / "model_target.py"
 SPEC = importlib.util.spec_from_file_location("model_target", SCRIPT_PATH)
@@ -102,6 +104,8 @@ def test_model_target_calls_openai_compatible_api(monkeypatch, tmp_path: Path) -
     assert response["candidate"].startswith("define Cand")
     assert response["metadata"]["adapter"] == "openai_compatible"
     assert response["metadata"]["model"] == "example-model"
+    assert response["metadata"]["prompt_condition"] == "zero_shot_formal_direct"
+    assert response["metadata"]["exemplar_bank"] is None
     assert "secret-key" not in stdout.getvalue()
     assert seen["url"] == "https://models.example/v1/chat/completions"
     assert seen["timeout"] == 12.0
@@ -109,3 +113,50 @@ def test_model_target_calls_openai_compatible_api(monkeypatch, tmp_path: Path) -
     assert seen["body"]["max_tokens"] == 77
     assert "axiom step: A(x) -> B(x)" in seen["body"]["messages"][1]["content"]
     assert "hidden_bridge" not in seen["body"]["messages"][1]["content"]
+
+
+def test_resolve_evaluation_contract_uses_request_values() -> None:
+    payload = {
+        "evaluation": {
+            "prompt_condition": "family_few_shot_cross_track_nl_to_formal",
+            "exemplar_bank": "configs/ct.json",
+        }
+    }
+
+    assert model_target.resolve_evaluation_contract(
+        payload,
+        cli_prompt_condition=None,
+        cli_exemplar_bank=None,
+    ) == ("family_few_shot_cross_track_nl_to_formal", "configs/ct.json")
+
+
+def test_resolve_evaluation_contract_rejects_cli_mismatch() -> None:
+    payload = {
+        "evaluation": {
+            "prompt_condition": "zero_shot_cross_track_nl_to_formal",
+            "exemplar_bank": None,
+        }
+    }
+
+    with pytest.raises(ValueError, match="CLI prompt condition does not match"):
+        model_target.resolve_evaluation_contract(
+            payload,
+            cli_prompt_condition="zero_shot_formal_direct",
+            cli_exemplar_bank=None,
+        )
+
+    with pytest.raises(ValueError, match="CLI exemplar bank does not match"):
+        model_target.resolve_evaluation_contract(
+            payload,
+            cli_prompt_condition=None,
+            cli_exemplar_bank="configs/unrequested.json",
+        )
+
+
+def test_resolve_evaluation_contract_rejects_malformed_request() -> None:
+    with pytest.raises(ValueError, match="evaluation must be an object"):
+        model_target.resolve_evaluation_contract(
+            {"evaluation": "zero_shot_formal_direct"},
+            cli_prompt_condition=None,
+            cli_exemplar_bank=None,
+        )

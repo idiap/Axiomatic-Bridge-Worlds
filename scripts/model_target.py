@@ -930,6 +930,41 @@ def extract_candidate_text(response_payload: Any, *, preserve_full_text: bool = 
     return clean_candidate(candidate)
 
 
+def resolve_evaluation_contract(
+    payload: Mapping[str, Any],
+    *,
+    cli_prompt_condition: str | None,
+    cli_exemplar_bank: str | None,
+) -> tuple[str, str | None]:
+    """Resolve one condition contract and reject request/CLI disagreement."""
+
+    evaluation = payload.get("evaluation")
+    if evaluation is None:
+        evaluation = {}
+    elif not isinstance(evaluation, Mapping):
+        raise ValueError("Request evaluation must be an object or null.")
+    request_condition = evaluation.get("prompt_condition")
+    request_bank = evaluation.get("exemplar_bank")
+    if request_condition is not None and not isinstance(request_condition, str):
+        raise ValueError("Request evaluation.prompt_condition must be a string or null.")
+    if request_bank is not None and not isinstance(request_bank, str):
+        raise ValueError("Request evaluation.exemplar_bank must be a string or null.")
+    request_declares_contract = request_condition is not None
+    if request_declares_contract and cli_prompt_condition and cli_prompt_condition != request_condition:
+        raise ValueError(
+            "CLI prompt condition does not match the benchmark request: "
+            f"{cli_prompt_condition!r} != {request_condition!r}."
+        )
+    if request_declares_contract and cli_exemplar_bank is not None and cli_exemplar_bank != request_bank:
+        raise ValueError(
+            "CLI exemplar bank does not match the benchmark request: "
+            f"{cli_exemplar_bank!r} != {request_bank!r}."
+        )
+    prompt_condition = cli_prompt_condition or request_condition or ZERO_SHOT_CONDITION
+    exemplar_bank = cli_exemplar_bank or request_bank
+    return prompt_condition, exemplar_bank
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run one ABW request against a model API.")
     parser.add_argument("--api-key-env", default="ABW_MODEL_API_KEY")
@@ -946,13 +981,25 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--context-tokens", type=int)
     parser.add_argument("--temperature", type=float)
     parser.add_argument("--timeout-seconds", type=float)
-    parser.add_argument("--prompt-condition", choices=SUPPORTED_PROMPT_CONDITIONS, default=ZERO_SHOT_CONDITION)
+    parser.add_argument("--prompt-condition", choices=SUPPORTED_PROMPT_CONDITIONS)
     parser.add_argument("--exemplar-bank")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    payload = json.load(sys.stdin)
+    try:
+        prompt_condition, exemplar_bank_path = resolve_evaluation_contract(
+            payload,
+            cli_prompt_condition=args.prompt_condition,
+            cli_exemplar_bank=args.exemplar_bank,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+    exemplar_bank = load_exemplar_bank(exemplar_bank_path) if exemplar_bank_path else None
+
     env_values = load_env_files()
     raw_base_url = args.base_url or resolve_setting(args.base_url_env, env_file_values=env_values) or DEFAULT_BASE_URL
     if not raw_base_url:
@@ -990,14 +1037,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     retries = int(raw_retries) if raw_retries else DEFAULT_RETRIES
 
-    payload = json.load(sys.stdin)
-    exemplar_bank = load_exemplar_bank(args.exemplar_bank) if args.exemplar_bank else None
     prompt = build_formal_direct_prompt(
         payload,
-        prompt_condition=args.prompt_condition,
+        prompt_condition=prompt_condition,
         exemplar_bank=exemplar_bank,
     )
-    output_instruction = model_output_instruction(args.prompt_condition)
+    output_instruction = model_output_instruction(prompt_condition)
     is_score_endpoint = _is_azure_ml_score_endpoint(str(base_url))
     request_body = (
         build_azure_ml_score_request(
@@ -1037,7 +1082,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         raw_candidate = extract_candidate_text(
             response_payload,
-            preserve_full_text=args.prompt_condition in NATURAL_LANGUAGE_DIRECT_CONDITIONS,
+            preserve_full_text=prompt_condition in NATURAL_LANGUAGE_DIRECT_CONDITIONS,
         )
     except MissingFinalAnswerError:
         raw_candidate = INVALID_CONVERSION_CANDIDATE
@@ -1047,7 +1092,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     conversion_metadata = None
-    if args.prompt_condition in NATURAL_LANGUAGE_DIRECT_CONDITIONS:
+    if prompt_condition in NATURAL_LANGUAGE_DIRECT_CONDITIONS:
         formal = payload["public_artifacts"]["formal"]
         vocabulary = CandidateVocabulary.from_public_artifacts(formal["signature"], formal["axioms"])
         conversion = convert_controlled_nl(raw_candidate, vocabulary)
@@ -1069,8 +1114,8 @@ def main(argv: list[str] | None = None) -> int:
                 ),
                 "model": model,
                 "base_url": base_url,
-                "prompt_condition": args.prompt_condition,
-                "exemplar_bank": args.exemplar_bank,
+                "prompt_condition": prompt_condition,
+                "exemplar_bank": exemplar_bank_path,
                 "raw_model_output": raw_candidate,
                 "response_issue": response_issue,
                 "thinking_length": len(response_payload.get("message", {}).get("thinking", ""))

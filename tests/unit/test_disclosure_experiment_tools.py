@@ -29,6 +29,8 @@ def test_robustness_plan_is_model_agnostic() -> None:
         target_command=("python", "scripts/model_target.py"),
         timeout_seconds=42.0,
         limit_per_family=3,
+        prompt_condition="zero_shot_cross_track_nl_to_formal",
+        exemplar_bank=None,
     )
 
     assert plan["target_command"] == ["python", "scripts/model_target.py"]
@@ -38,6 +40,8 @@ def test_robustness_plan_is_model_agnostic() -> None:
     command = plan["runs"][0]["command"]
     assert "run-benchmark" in command
     assert "--family" in command
+    assert "--prompt-condition" in command
+    assert "zero_shot_cross_track_nl_to_formal" in command
     assert "--target-command=python" in command
     assert "--target-command=scripts/model_target.py" in command
 

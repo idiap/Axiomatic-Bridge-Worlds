@@ -18,7 +18,7 @@ TWINE_CHECK ?= $(UV) run --with twine python -m twine check
 .PHONY: setup setup-base setup-test setup-validation test test-validation dist dist-check example dataset paper-core paired-difficulty robustness-plan run-experiment
 
 setup:
-	$(UV) sync --all-extras
+	$(UV) sync
 
 setup-base:
 	$(UV) sync
@@ -30,7 +30,7 @@ setup-validation:
 	$(UV) sync --extra validation
 
 test:
-	$(UV) run --all-extras pytest
+	$(UV) run --extra test pytest
 
 test-validation:
 	$(UV) run --extra test --extra validation pytest

@@ -182,6 +182,14 @@ def build_parser() -> argparse.ArgumentParser:
     benchmark_parser.add_argument("--family", action="append", default=[])
     benchmark_parser.add_argument("--limit", type=int)
     benchmark_parser.add_argument("--timeout-seconds", type=float, default=60.0)
+    benchmark_parser.add_argument(
+        "--prompt-condition",
+        help="Declared evaluation condition forwarded to the target adapter and verified in its response metadata.",
+    )
+    benchmark_parser.add_argument(
+        "--exemplar-bank",
+        help="Optional exemplar-bank path forwarded with the declared evaluation condition.",
+    )
     benchmark_parser.add_argument("--prover-backend")
     benchmark_parser.add_argument(
         "--backend-command",
@@ -387,6 +395,8 @@ def _cmd_export_public_dataset(args: argparse.Namespace, parser: argparse.Argume
 
 
 def _cmd_run_benchmark(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
+    if args.exemplar_bank and not args.prompt_condition:
+        parser.error("run-benchmark --exemplar-bank requires --prompt-condition.")
     results = run_benchmark(
         args.dataset,
         target_command=tuple(args.target_command),
@@ -394,6 +404,8 @@ def _cmd_run_benchmark(args: argparse.Namespace, parser: argparse.ArgumentParser
         families=tuple(args.family),
         limit=args.limit,
         timeout_seconds=args.timeout_seconds,
+        prompt_condition=args.prompt_condition,
+        exemplar_bank=args.exemplar_bank,
         backend_name=args.prover_backend,
         backend_command=tuple(args.backend_command),
         output_path=args.output,
@@ -404,7 +416,7 @@ def _cmd_run_benchmark(args: argparse.Namespace, parser: argparse.ArgumentParser
         print(json.dumps(payload, indent=2))
     else:
         print(json.dumps(results, indent=2))
-    return 0
+    return 1 if int(results["summary"].get("contract_failures", 0)) else 0
 
 
 def _cmd_score_candidate(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
