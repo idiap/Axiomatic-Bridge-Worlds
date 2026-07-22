@@ -44,12 +44,13 @@ def test_repository_surface_files_exist() -> None:
     for relative_path in (
         "CITATION.cff",
         "DISCLOSURE.md",
+        "EVALUATION.md",
         "LICENSES/MIT.txt",
         "REUSE.toml",
         ".gitattributes",
         "docs/repository_layout.md",
         "configs/README.md",
-        "datasets/README.md",
+        "dataset/README.md",
         "examples/README.md",
         "scripts/README.md",
         "tests/README.md",
@@ -123,15 +124,25 @@ def test_disclosure_branch_does_not_track_generated_data_or_stage_artifacts() ->
     )
     tracked = set(result.stdout.splitlines())
     assert not any(path.startswith("artifacts/") for path in tracked)
-    assert tracked.intersection({"datasets/README.md", "datasets/.gitkeep"}) == {
-        "datasets/README.md",
-        "datasets/.gitkeep",
-    }
-    assert not any(path.startswith("datasets/") and path not in {"datasets/README.md", "datasets/.gitkeep"} for path in tracked)
+    assert not Path("datasets").exists()
+    assert not any(path.startswith("datasets/") for path in tracked)
     assert ("configs/" + "model_" + "matrix_" + "formal_" + "direct.json") not in tracked
     assert ("scripts/" + "run_" + "formal_" + "direct_experiment.py") not in tracked
-    assert ("scripts/" + "internal_" + "model_target.py") not in tracked
-    assert ("scripts/" + "openai_" + "model_target.py") not in tracked
+    public_scripts = {
+        "build_few_shot_exemplar_bank.py",
+        "build_paired_difficulty_dataset.py",
+        "example_target_system.py",
+        "generate_perturbed_dataset.py",
+        "install_seeded_v2_dataset.py",
+        "model_target.py",
+        "retry_failed_invocations.py",
+        "robustness_plan.py",
+        "run_benchmark.py",
+        "run_experiment.py",
+        "score_candidate.py",
+        "validate_world.py",
+    }
+    assert {path.name for path in Path("scripts").glob("*.py")} == public_scripts
     assert ("abw_core/" + "model_" + "matrix.py") not in tracked
     assert ("docs/" + "concept_" + "paper.tex") not in tracked
     assert ("docs/" + "concept_" + "paper.pdf") not in tracked
@@ -144,6 +155,18 @@ def test_disclosure_branch_does_not_track_generated_data_or_stage_artifacts() ->
         for path in tracked
         if path.startswith("abw_core/generator/families/") and path.endswith(".py") and not path.endswith("__init__.py")
     } == DISCLOSURE_FAMILIES
+
+
+def test_public_benchmark_surface_is_json_only() -> None:
+    assert not Path("abw_core/benchmark_reporting.py").exists()
+    cli_source = Path("abw_core/cli.py").read_text(encoding="utf-8")
+    for removed_surface in (
+        "render-benchmark-report",
+        "--latex-output",
+        "--pdf-output",
+        "--compile-report-pdf",
+    ):
+        assert removed_surface not in cli_source
 
 
 def test_docs_do_not_advertise_pruned_paper_or_platform_files() -> None:

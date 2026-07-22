@@ -29,17 +29,17 @@ natural-language task surfaces are paired views of the same generated worlds,
 so a formal run and an NL run can evaluate the same family/seed sample.
 
 ```bash
-python scripts/generate_dataset.py --config configs/mvp.yaml --output artifacts/abw_smoke_dataset
+python scripts/install_seeded_v2_dataset.py
 ```
 
 ```bash
 python -m abw_core run-benchmark \
-  --dataset artifacts/abw_smoke_dataset \
+  --dataset dataset/abw-formal-nl-core \
   --target-command python \
   --target-command scripts/example_target_system.py \
   --split dev \
   --limit 10 \
-  --output artifacts/abw_benchmark_report.json
+  --output artifacts/abw_benchmark_results.json
 ```
 
 Repeat `--target-command` once per argv token, just like the subprocess scorer
@@ -79,12 +79,12 @@ ABW_MODEL_API_KEY=... \
 ABW_MODEL_BASE_URL=https://api.example.test/v1 \
 ABW_MODEL_ID=my-model \
 python -m abw_core run-benchmark \
-  --dataset artifacts/abw_smoke_dataset \
+  --dataset dataset/abw-formal-nl-core \
   --target-command python \
-  --target-command scripts/generic_model_target.py \
+  --target-command scripts/model_target.py \
   --split dev \
   --limit 10 \
-  --output artifacts/abw_benchmark_report.json
+  --output artifacts/abw_benchmark_results.json
 ```
 
 The adapter also accepts command-line overrides such as `--model`,
@@ -101,7 +101,7 @@ Robustness is a post-generation perturbation analysis:
 
 ```bash
 python scripts/generate_perturbed_dataset.py \
-  --source datasets/paper_core \
+  --source dataset/abw-formal-nl-core \
   --output artifacts/abw_perturbed/alpha_renaming \
   --perturbation alpha_renaming
 ```
@@ -113,39 +113,24 @@ commands for any target adapter:
 
 ```bash
 python scripts/robustness_plan.py \
-  --base-dataset-root datasets/paper_core \
+  --base-dataset-root dataset/abw-formal-nl-core \
   --target-command python \
-  --target-command scripts/generic_model_target.py \
+  --target-command scripts/model_target.py \
   --output artifacts/abw_robustness/robustness_plan.json
 ```
 
-After those commands have produced JSON outputs, compute original-minus-perturbed
-drops:
-
-```bash
-python scripts/robustness_summary.py \
-  --plan artifacts/abw_robustness/robustness_plan.json \
-  --output artifacts/abw_robustness/robustness_summary.json
-```
+The plan records paired original and perturbed JSON output paths for downstream
+analysis.
 
 C0-C6 difficulty shapes are generator-side paired rewrites rather than
 semantics-preserving robustness perturbations:
 
 ```bash
-python scripts/build_paired_difficulty_dataset.py \
-  --all-families \
-  --examples-per-family 1 \
-  --output datasets/paired_difficulty_shapes \
-  --overwrite
+python scripts/build_paired_difficulty_dataset.py --overwrite
 ```
 
-Run the same `run-benchmark` adapter on that dataset, then summarize by shape:
-
-```bash
-python scripts/difficulty_shape_summary.py \
-  --report artifacts/abw_c0_c6_report.json \
-  --output artifacts/abw_c0_c6_summary.json
-```
+Run the same `run-benchmark` adapter on that derived dataset. Each record keeps
+its difficulty case and paired source identity in metadata.
 
 This separation is intentional: dataset configs describe ordinary generated
 corpora, robustness creates perturbed copies after generation, and C0-C6
@@ -238,7 +223,7 @@ For a true blind benchmark setup, use one of these deployment patterns:
 
   ```bash
   python -m abw_core export-public-dataset \
-    --dataset datasets/paper_core \
+    --dataset dataset/abw-formal-nl-core \
     --output artifacts/abw_paper_core_public
   ```
 

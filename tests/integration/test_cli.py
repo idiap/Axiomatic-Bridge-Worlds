@@ -91,8 +91,7 @@ def test_cli_generate_and_score(tmp_path) -> None:
 def test_cli_run_benchmark_against_example_target_system(tmp_path) -> None:
     config_path = tmp_path / "benchmark_dataset.yaml"
     dataset_root = tmp_path / "benchmark_dataset"
-    report_path = tmp_path / "benchmark_report.json"
-    latex_path = tmp_path / "benchmark_report.tex"
+    results_path = tmp_path / "benchmark_results.json"
     config_path.write_text(
         """
 dataset_name: benchmark_smoke
@@ -111,7 +110,9 @@ proof_budget: 3
     subprocess.run(
         [
             sys.executable,
-            "scripts/generate_dataset.py",
+            "-m",
+            "abw_core.cli",
+            "generate-dataset",
             "--config",
             str(config_path),
             "--output",
@@ -135,7 +136,7 @@ proof_budget: 3
             "--target-command",
             str((Path.cwd() / "scripts" / "example_target_system.py").resolve()),
             "--output",
-            str(report_path),
+            str(results_path),
         ],
         check=True,
         capture_output=True,
@@ -143,45 +144,15 @@ proof_budget: 3
     )
 
     payload = json.loads(run.stdout)
-    report = json.loads(report_path.read_text(encoding="utf-8"))
-    assert payload["output"] == str(report_path)
-    assert report["dataset"]["manifest"]["output_dir"] == str(dataset_root)
-    assert report["summary"]["num_worlds"] == 2
-    assert report["summary"]["completed"] == 2
-    assert report["summary"]["valid_submissions"] == 2
-    assert report["summary"]["primary_score"] > 0.0
-    assert report["by_family"]["predicate_invention"]["completed"] == 1
-    assert report["by_family"]["analogy"]["completed"] == 1
-
-    rendered = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "abw_core.cli",
-            "render-benchmark-report",
-            "--report",
-            str(report_path),
-            "--output",
-            str(latex_path),
-            "--title",
-            "Smoke Benchmark Report",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-
-    rendered_payload = json.loads(rendered.stdout)
-    assert Path(rendered_payload["report"]) == report_path.resolve()
-    assert Path(rendered_payload["tex"]) == latex_path.resolve()
-    latex_source = latex_path.read_text(encoding="utf-8")
-    assert "Smoke Benchmark Report" in latex_source
-    assert "Family Summary" in latex_source
-    assert r"predicate\_invention" in latex_source
-    assert "Task Class Breakdown" in latex_source
-    assert "Complexity Breakdown" in latex_source
-    assert "Dataset Descriptive Statistics" in latex_source
-
+    results = json.loads(results_path.read_text(encoding="utf-8"))
+    assert payload["output"] == str(results_path)
+    assert results["dataset"]["manifest"]["output_dir"] == str(dataset_root)
+    assert results["summary"]["num_worlds"] == 2
+    assert results["summary"]["completed"] == 2
+    assert results["summary"]["valid_submissions"] == 2
+    assert results["summary"]["primary_score"] > 0.0
+    assert results["by_family"]["predicate_invention"]["completed"] == 1
+    assert results["by_family"]["analogy"]["completed"] == 1
 
 def test_cli_can_export_public_only_dataset(tmp_path) -> None:
     dataset_root = tmp_path / "dataset"
@@ -205,7 +176,9 @@ proof_budget: 3
     subprocess.run(
         [
             sys.executable,
-            "scripts/generate_dataset.py",
+            "-m",
+            "abw_core.cli",
+            "generate-dataset",
             "--config",
             str(config_path),
             "--output",
@@ -246,159 +219,6 @@ proof_budget: 3
     assert (world_root / "nl" / "problem.md").exists()
 
 
-def test_render_benchmark_report_script_wrapper_runs_from_repo_root(tmp_path) -> None:
-    report_path = tmp_path / "benchmark_report.json"
-    latex_path = tmp_path / "benchmark_report.tex"
-    report_path.write_text(
-        json.dumps(
-            {
-                "dataset": {
-                    "root": str(tmp_path / "dataset"),
-                    "manifest": {"dataset_name": "demo_dataset", "version": "0.2.0", "families": ["predicate_invention"]},
-                    "selected_splits": ["test_public"],
-                    "limit": 1,
-                },
-                "target": {"command": ["python", "scripts/example_target_system.py"], "timeout_seconds": 60.0},
-                "scoring": {"backend_override": None},
-                "summary": {
-                    "num_worlds": 1,
-                    "completed": 1,
-                    "failed_invocations": 0,
-                    "scoring_failures": 0,
-                    "valid_submissions": 1,
-                    "coverage": 1.0,
-                    "mean_latency_seconds": 0.1,
-                    "p95_latency_seconds": 0.1,
-                    "primary_score": 1.0,
-                    "mean_validity_score": 1.0,
-                    "mean_hidden_goal_solve_rate": 1.0,
-                    "mean_proof_cost_reduction": 0.0,
-                    "mean_compression_score": 0.0,
-                    "mean_semantic_equivalence_score": 1.0,
-                    "mean_novelty_score": 0.0,
-                    "mean_minimality_score": 0.5,
-                    "mean_candidate_size": 6.0,
-                    "mean_total_score": 1.0,
-                },
-                "by_split": {
-                    "test_public": {
-                        "num_worlds": 1,
-                        "completed": 1,
-                        "failed_invocations": 0,
-                        "scoring_failures": 0,
-                        "valid_submissions": 1,
-                        "coverage": 1.0,
-                        "mean_latency_seconds": 0.1,
-                        "primary_score": 1.0,
-                    }
-                },
-                "by_family": {
-                    "predicate_invention": {
-                        "num_worlds": 1,
-                        "completed": 1,
-                        "failed_invocations": 0,
-                        "scoring_failures": 0,
-                        "valid_submissions": 1,
-                        "coverage": 1.0,
-                        "mean_latency_seconds": 0.1,
-                        "primary_score": 1.0,
-                    }
-                },
-                "worlds": [],
-            },
-            indent=2,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-
-    rendered = subprocess.run(
-        [
-            sys.executable,
-            "scripts/render_benchmark_report.py",
-            "--report",
-            str(report_path),
-            "--output",
-            str(latex_path),
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-
-    payload = json.loads(rendered.stdout)
-    assert Path(payload["tex"]) == latex_path.resolve()
-    assert "Run Overview" in latex_path.read_text(encoding="utf-8")
-
-
-def test_cli_run_benchmark_can_emit_latex_sidecar(tmp_path) -> None:
-    config_path = tmp_path / "benchmark_dataset.yaml"
-    dataset_root = tmp_path / "benchmark_dataset"
-    report_path = tmp_path / "benchmark_report.json"
-    latex_path = tmp_path / "benchmark_report_fragment.tex"
-    config_path.write_text(
-        """
-dataset_name: benchmark_smoke
-version: 0.2.0
-families: [predicate_invention]
-splits:
-  train: 1
-start_seed: 11
-max_term_depth: 3
-proof_budget: 3
-""".strip()
-        + "\n",
-        encoding="utf-8",
-    )
-
-    subprocess.run(
-        [
-            sys.executable,
-            "scripts/generate_dataset.py",
-            "--config",
-            str(config_path),
-            "--output",
-            str(dataset_root),
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-
-    run = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "abw_core.cli",
-            "run-benchmark",
-            "--dataset",
-            str(dataset_root),
-            "--target-command",
-            sys.executable,
-            "--target-command",
-            str((Path.cwd() / "scripts" / "example_target_system.py").resolve()),
-            "--output",
-            str(report_path),
-            "--latex-output",
-            str(latex_path),
-            "--report-fragment",
-            "--report-title",
-            "Integrated Benchmark Report",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-
-    payload = json.loads(run.stdout)
-    assert payload["output"] == str(report_path)
-    assert Path(payload["report_artifacts"]["tex"]) == latex_path.resolve()
-    latex_source = latex_path.read_text(encoding="utf-8")
-    assert r"\begin{document}" not in latex_source
-    assert "Run Overview" in latex_source
-    assert r"predicate\_invention" in latex_source
-
-
 def test_cli_run_benchmark_reports_target_failures(tmp_path) -> None:
     config_path = tmp_path / "benchmark_dataset.yaml"
     dataset_root = tmp_path / "benchmark_dataset"
@@ -421,7 +241,9 @@ proof_budget: 3
     subprocess.run(
         [
             sys.executable,
-            "scripts/generate_dataset.py",
+            "-m",
+            "abw_core.cli",
+            "generate-dataset",
             "--config",
             str(config_path),
             "--output",
@@ -461,12 +283,16 @@ proof_budget: 3
     assert report["worlds"][0]["score"]["valid"] is False
 
 
-def test_script_generate_dataset_entrypoint(tmp_path) -> None:
+def test_cli_generate_dataset_entrypoint(tmp_path) -> None:
     output_root = tmp_path / "dataset"
     run = subprocess.run(
         [
             sys.executable,
-            "scripts/generate_dataset.py",
+            "-m",
+            "abw_core.cli",
+            "generate-dataset",
+            "--config",
+            "tests/fixtures/smoke.yaml",
             "--output",
             str(output_root),
         ],
@@ -517,7 +343,9 @@ prover_backend:
     subprocess.run(
         [
             sys.executable,
-            "scripts/generate_dataset.py",
+            "-m",
+            "abw_core.cli",
+            "generate-dataset",
             "--config",
             str(config_path),
             "--output",
@@ -573,7 +401,9 @@ splits:
     subprocess.run(
         [
             sys.executable,
-            "scripts/generate_dataset.py",
+            "-m",
+            "abw_core.cli",
+            "generate-dataset",
             "--config",
             str(config_path),
             "--output",

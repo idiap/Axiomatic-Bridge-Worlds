@@ -123,8 +123,8 @@ def test_core_family_default_dsl_version_is_current_public_surface(tmp_path: Pat
     assert manifest["dsl_version"] == "abw-dsl-v1"
 
 
-def test_paper_core_config_uses_disclosure_families() -> None:
-    config_path = Path(__file__).resolve().parents[2] / "configs" / "paper_core.yaml"
+def test_seeded_v2_config_uses_disclosure_families() -> None:
+    config_path = Path(__file__).resolve().parents[2] / "configs" / "paper_core_seeded_v2.yaml"
 
     config = load_config(config_path)
 
@@ -133,3 +133,4 @@ def test_paper_core_config_uses_disclosure_families() -> None:
     assert config.split_start_seeds == {"dev": 4100, "test_public": 3114}
     assert config.splits["dev"] == 35
     assert config.splits["test_public"] == 350
+    assert config.output_dir == "dataset/abw-formal-nl-core"

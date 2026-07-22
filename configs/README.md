@@ -5,17 +5,16 @@ what packaged material should be generated, and with what defaults?
 
 | File | Use |
 | --- | --- |
-| `mvp.yaml` | Default 14-world all-family smoke profile used by `scripts/generate_dataset.py`. |
-| `paper_core.yaml` | Paper-core reproduction: 5 dev + 50 public-test worlds per family. |
 | `paper_core_seeded_v2.yaml` | Structurally diverse paper-core release with schema-disjoint dev/test splits. |
 
 Every generated world packages the same task through both formal and
 natural-language artifacts; the `views` field records that paired surface (it
 does not create separate datasets).
 
-Robustness perturbations and C0-C6 difficulty shapes are **not** preset switches.
-Generate a base dataset first, then use `scripts/generate_perturbed_dataset.py`
-(robustness) or `scripts/build_paired_difficulty_dataset.py` (paired C0-C6).
+Robustness perturbations and C0-C6 difficulty shapes are derived only from the
+packaged seeded-v2 worlds. Use `scripts/generate_perturbed_dataset.py` with
+`scripts/robustness_plan.py`, and `scripts/build_paired_difficulty_dataset.py`,
+so derived data and model-agnostic run plans remain auditable.
 
 ## Editing Guidance
 

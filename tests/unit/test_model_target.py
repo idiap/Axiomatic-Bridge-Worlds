@@ -6,7 +6,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-"""Tests for the disclosure-friendly generic model target adapter."""
+"""Tests for the public model-agnostic target adapter."""
 
 from __future__ import annotations
 
@@ -18,11 +18,11 @@ import sys
 from typing import Any
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[2] / "scripts" / "generic_model_target.py"
-SPEC = importlib.util.spec_from_file_location("generic_model_target", SCRIPT_PATH)
+SCRIPT_PATH = Path(__file__).resolve().parents[2] / "scripts" / "model_target.py"
+SPEC = importlib.util.spec_from_file_location("model_target", SCRIPT_PATH)
 assert SPEC is not None and SPEC.loader is not None
-generic_model_target = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(generic_model_target)
+model_target = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(model_target)
 
 
 class _FakeResponse:
@@ -45,7 +45,7 @@ def _artifact(path: Path, text: str) -> str:
     return str(path)
 
 
-def test_generic_model_target_calls_openai_compatible_api(monkeypatch, tmp_path: Path) -> None:
+def test_model_target_calls_openai_compatible_api(monkeypatch, tmp_path: Path) -> None:
     payload = {
         "world_id": "abw_test_0000",
         "family": "predicate_invention",
@@ -91,21 +91,21 @@ def test_generic_model_target_calls_openai_compatible_api(monkeypatch, tmp_path:
     monkeypatch.setenv("ABW_MODEL_ID", "example-model")
     monkeypatch.setenv("ABW_MODEL_MAX_TOKENS", "77")
     monkeypatch.setenv("ABW_MODEL_TIMEOUT_SECONDS", "12")
-    monkeypatch.setattr(generic_model_target.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(model_target.request, "urlopen", fake_urlopen)
     monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(payload)))
     stdout = io.StringIO()
     monkeypatch.setattr(sys, "stdout", stdout)
 
-    assert generic_model_target.main([]) == 0
+    assert model_target.main([]) == 0
 
     response = json.loads(stdout.getvalue())
     assert response["candidate"].startswith("define Cand")
-    assert response["metadata"]["adapter"] == "generic_openai_compatible"
+    assert response["metadata"]["adapter"] == "openai_compatible"
     assert response["metadata"]["model"] == "example-model"
     assert "secret-key" not in stdout.getvalue()
     assert seen["url"] == "https://models.example/v1/chat/completions"
     assert seen["timeout"] == 12.0
     assert seen["body"]["model"] == "example-model"
     assert seen["body"]["max_tokens"] == 77
-    assert "Find the bridge." in seen["body"]["messages"][1]["content"]
+    assert "axiom step: A(x) -> B(x)" in seen["body"]["messages"][1]["content"]
     assert "hidden_bridge" not in seen["body"]["messages"][1]["content"]

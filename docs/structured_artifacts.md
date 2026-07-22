@@ -25,8 +25,8 @@ The YAML files in this repository are generation presets.
 
 ### Dataset presets
 
-The files in `configs/` define two reproducible generation profiles: the
-smoke sample (`mvp.yaml`) and the paper-core reproduction sample. They answer
+The file `configs/paper_core_seeded_v2.yaml` defines the reproducible benchmark
+generation profile. It answers
 four questions for the generator:
 
 - which benchmark families should be rotated through

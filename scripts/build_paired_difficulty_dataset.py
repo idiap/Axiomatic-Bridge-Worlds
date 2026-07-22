@@ -26,6 +26,7 @@ import shutil
 from typing import Any
 
 from abw_core import ir
+from abw_core.benchmark import discover_worlds
 from abw_core.generator import WorldGenerationRequest, generate_world
 from abw_core.generator.templates import iterate_term
 from abw_core.packager import load_world, package_world, validate_package
@@ -33,7 +34,8 @@ from scripts.generate_perturbed_dataset import _alpha_rename_world
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUTPUT = REPO_ROOT / "datasets" / "paper_core_paired_difficulty_shapes_independent"
+DEFAULT_SOURCE = REPO_ROOT / "dataset" / "abw-formal-nl-core"
+DEFAULT_OUTPUT = REPO_ROOT / "artifacts" / "paper_core_seeded_v2" / "derived" / "difficulty_c0_c6_20pf"
 DEFAULT_MANIFEST = "paired_difficulty_manifest.json"
 SPLIT = "test_public"
 PAPER_FAMILIES = (
@@ -351,8 +353,64 @@ def _add_public_decoys(world: ir.World, *, family: str, base_index: int, stage: 
     )
 
 
+def _term_sort(term: ir.Term, signature: ir.Signature) -> str | None:
+    if isinstance(term, ir.VarTerm):
+        return term.variable.sort
+    if isinstance(term, ir.ConstTerm):
+        return next((item.sort for item in signature.constants if item.name == term.name), None)
+    if isinstance(term, ir.FuncTerm):
+        return next((item.output_sort for item in signature.functions if item.name == term.name), None)
+    return None
+
+
+def _deepen_term(term: ir.Term, signature: ir.Signature, *, steps: int) -> ir.Term:
+    if isinstance(term, ir.FuncTerm):
+        return ir.FuncTerm(
+            term.name,
+            tuple(_deepen_term(argument, signature, steps=steps) for argument in term.args),
+        )
+    sort = _term_sort(term, signature)
+    transition = next(
+        (
+            function
+            for function in signature.functions
+            if function.input_sorts == (sort,) and function.output_sort == sort
+        ),
+        None,
+    )
+    if transition is None:
+        return term
+    deepened = term
+    for _ in range(max(1, steps)):
+        deepened = ir.FuncTerm(transition.name, (deepened,))
+    return deepened
+
+
 def _deep_bridge_goal(world: ir.World, *, step: int) -> ir.Goal | None:
-    """Build one deeper hidden goal for transition-shaped paper-core families."""
+    """Build a vocabulary-safe deeper goal from an existing hidden target."""
+
+    if world.targets_hidden:
+        source = world.targets_hidden[-1]
+        atoms = tuple(
+            ir.Atom(
+                atom.predicate,
+                tuple(_deepen_term(term, world.signature, steps=max(1, step - 3)) for term in atom.terms),
+            )
+            for atom in source.atoms
+        )
+        return ir.Goal(
+            name=f"{source.name}_deep_{step}",
+            atoms=atoms,
+            budget=max(step, source.budget),
+            description=f"Seeded-v2 depth control derived from hidden target {source.name}.",
+        )
+
+    # Analogy worlds use transported subtheory theorems instead of top-level goals.
+    return None
+
+
+def _legacy_deep_bridge_goal(world: ir.World, *, step: int) -> ir.Goal | None:
+    """Legacy fixed-schema helper retained for provenance, not used by seeded-v2."""
 
     budget = max(step, int(world.scoring_config.get("proof_budget", step)))
     if world.family == "invariant":
@@ -434,20 +492,45 @@ def _add_analogy_deep_transport(world: ir.World, *, step: int) -> ir.World:
         )
 
     left_theory = world.theories[left_index]
+    signature = left_theory.document.signature()
+    unary_functions = [
+        function
+        for function in signature.functions
+        if len(function.input_sorts) == 1 and function.input_sorts[0] == function.output_sort
+    ]
+    unary_predicates = [predicate for predicate in signature.predicates if len(predicate.input_sorts) == 1]
+    pair = next(
+        (
+            (function, predicate)
+            for function in unary_functions
+            for predicate in unary_predicates
+            if predicate.input_sorts[0] == function.output_sort
+        ),
+        None,
+    )
+    if pair is None:
+        return replace(
+            world,
+            metadata={
+                **world.metadata,
+                "paired_difficulty_deep_bridge_note": "No compatible unary analogy symbols were available.",
+            },
+        )
+    function, predicate = pair
     theorem_name = f"left_deep_bridge_{step}"
     if any(theorem.name == theorem_name for theorem in left_theory.document.theorems):
         return world
 
-    variable = ir.Variable("x", "L0")
+    variable = ir.Variable("x", function.input_sorts[0])
     term: ir.Term = ir.VarTerm(variable)
     for _ in range(max(2, step // 2)):
-        term = ir.FuncTerm("lg", (ir.FuncTerm("lf", (term,)),))
+        term = ir.FuncTerm(function.name, (term,))
 
     theorem = ir.HornClause(
         name=theorem_name,
         variables=(variable,),
-        premises=(ir.Atom("LP", (ir.VarTerm(variable),)),),
-        conclusion=ir.Atom("LP", (term,)),
+        premises=(ir.Atom(predicate.name, (ir.VarTerm(variable),)),),
+        conclusion=ir.Atom(predicate.name, (term,)),
     )
     updated_left = replace(
         left_theory,
@@ -837,9 +920,8 @@ def build_dataset(
             "cumulative controls, while C6 is the deliberate stress-boundary bundle."
         ),
         "selection_note": (
-            "All seven paper-core families are included. The stratum label is inherited from prior GPT-5.5 "
-            "Formal Direct family performance: analogy/invariant/lemma are high-prior, while predicate, "
-            "multi-step, normal-form, and quotient are hard-prior."
+            "All seven paper-core families are included. Difficulty strata are fixed by the benchmark "
+            "definition and do not depend on the model being evaluated."
         ),
         "validation": {
             "enabled": validate,
@@ -962,19 +1044,189 @@ def build_case_dataset(
     return manifest
 
 
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Build the paired ABW difficulty-control dataset.")
-    parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
-    parser.add_argument("--source-dataset-root", default=str(REPO_ROOT / "datasets" / "paper_core"))
-    parser.add_argument(
-        "--case",
-        action="append",
-        default=[],
-        help="Source-world case spec LABEL:FAMILY:WORLD_ID. Defaults to one easy and one hard case.",
+def _source_variant_world(
+    *,
+    source_world_root: Path,
+    family: str,
+    base_index: int,
+    level: DifficultyLevel,
+) -> ir.World:
+    source = load_world(source_world_root)
+    source_world_id = source.world_id
+    world = replace(
+        source,
+        world_id=f"abw_paired_{family}_{base_index:02d}_{level.level_id}",
+        metadata={
+            **source.metadata,
+            "paired_difficulty_experiment": "paper_core_seeded_v2_c0_c6",
+            "paired_difficulty_control_mode": "independent_shapes",
+            "paired_difficulty_source_world_id": source_world_id,
+            "paired_difficulty_source_family": family,
+            "paired_difficulty_base_index": base_index,
+            "paired_difficulty_family_prior_stratum": FAMILY_PRIOR_STRATA.get(family, "unknown"),
+            "paired_difficulty_hidden_bridge_fixed": True,
+        },
     )
-    parser.add_argument("--all-families", action="store_true", help="Generate the older all-family paired dataset.")
-    parser.add_argument("--examples-per-family", type=int, default=2)
-    parser.add_argument("--start-seed", type=int, default=9100)
+    world = _add_deep_bridge_shape(world, step=level.deep_bridge_step)
+    world = _add_public_decoys(world, family=family, base_index=base_index, stage=level.public_decoy_stage)
+    world = _add_abstraction_chain_proxy(
+        world,
+        family=family,
+        base_index=base_index,
+        enabled=level.abstraction_chain_proxy,
+    )
+    if level.alpha_rename_and_reorder:
+        world = _alpha_rename_and_reorder(world)
+    return replace(
+        world,
+        metadata={
+            **world.metadata,
+            "paired_difficulty_level_index": level.index,
+            "paired_difficulty_level_id": level.level_id,
+            "paired_difficulty_level_label": level.label,
+            "paired_difficulty_expected_complexity_rank": level.expected_complexity_rank,
+            "paired_difficulty_requested_controls": list(level.requested_controls),
+            "paired_difficulty_feature_pattern": level.feature_pattern,
+            "paired_difficulty_scientific_rationale": level.scientific_rationale,
+            "paired_difficulty_control_description": level.description,
+            "paired_difficulty_base_key": f"{family}:{source_world_id}",
+        },
+    )
+
+
+def _selected_source_worlds(
+    source_dataset_root: Path,
+    *,
+    source_split: str,
+    families: tuple[str, ...],
+    examples_per_family: int,
+) -> dict[str, list[Path]]:
+    if examples_per_family < 1:
+        raise ValueError("examples_per_family must be positive.")
+    discovered = discover_worlds(source_dataset_root, splits=(source_split,), families=families)
+    by_family: dict[str, list[Path]] = {family: [] for family in families}
+    for world in discovered:
+        by_family[world.family].append(world.root)
+    for family, roots in by_family.items():
+        roots.sort(key=lambda path: path.name)
+        if len(roots) < examples_per_family:
+            raise ValueError(
+                f"Requested {examples_per_family} source worlds for {family}, but found {len(roots)}."
+            )
+        by_family[family] = roots[:examples_per_family]
+    return by_family
+
+
+def build_seeded_v2_dataset(
+    *,
+    output_root: Path,
+    source_dataset_root: Path,
+    source_split: str,
+    families: tuple[str, ...],
+    examples_per_family: int,
+    overwrite: bool,
+    validate: bool,
+) -> dict[str, Any]:
+    if output_root.exists():
+        if not overwrite:
+            raise FileExistsError(f"Output root already exists: {output_root}. Use --overwrite to replace it.")
+        shutil.rmtree(output_root)
+    output_root.mkdir(parents=True, exist_ok=True)
+
+    selected = _selected_source_worlds(
+        source_dataset_root,
+        source_split=source_split,
+        families=families,
+        examples_per_family=examples_per_family,
+    )
+    worlds: list[dict[str, Any]] = []
+    validation_failures: list[dict[str, Any]] = []
+    for family in families:
+        for base_index, source_world_root in enumerate(selected[family]):
+            source_world_id = source_world_root.name
+            for level in DIFFICULTY_LEVELS:
+                world = _source_variant_world(
+                    source_world_root=source_world_root,
+                    family=family,
+                    base_index=base_index,
+                    level=level,
+                )
+                world_root = output_root / SPLIT / family / world.world_id
+                package_world(world, world_root)
+                if validate:
+                    report = validate_package(world_root)
+                    if not report.get("valid", False):
+                        validation_failures.append({"world_root": str(world_root), "report": report})
+                worlds.append(
+                    {
+                        "world_id": world.world_id,
+                        "split": SPLIT,
+                        "family": family,
+                        "source_split": source_split,
+                        "source_world_id": source_world_id,
+                        "source_world_root": str(source_world_root),
+                        "base_index": base_index,
+                        "base_key": f"{family}:{source_world_id}",
+                        "difficulty_level_index": level.index,
+                        "difficulty_level_id": level.level_id,
+                        "difficulty_level_label": level.label,
+                        "requested_controls": list(level.requested_controls),
+                        "world_root": str(world_root),
+                    }
+                )
+
+    source_manifest = source_dataset_root / "manifest.json"
+    manifest = {
+        "dataset_name": "paper_core_seeded_v2_paired_difficulty_controls",
+        "created_at_utc": _utc_now(),
+        "version": "0.4.0",
+        "control_mode": "independent_shapes",
+        "split": SPLIT,
+        "source_dataset_root": str(source_dataset_root),
+        "source_dataset_manifest": str(source_manifest),
+        "source_split": source_split,
+        "families": list(families),
+        "examples_per_family": examples_per_family,
+        "worlds_per_family": examples_per_family * len(DIFFICULTY_LEVELS),
+        "world_count": len(worlds),
+        "base_world_count": examples_per_family * len(families),
+        "source_selection": "lexicographically first world IDs within each requested family",
+        "difficulty_levels": [
+            {
+                "index": level.index,
+                "level_id": level.level_id,
+                "label": level.label,
+                "requested_controls": list(level.requested_controls),
+                "description": level.description,
+            }
+            for level in DIFFICULTY_LEVELS
+        ],
+        "design_note": (
+            "Every C0--C6 group is derived from one packaged paper_core_seeded_v2 source world. "
+            "C1--C5 are independent interventions; C6 is the combined stress-boundary intervention."
+        ),
+        "validation": {
+            "enabled": validate,
+            "valid": not validation_failures,
+            "failures": validation_failures,
+        },
+        "worlds": worlds,
+    }
+    payload = json.dumps(manifest, indent=2) + "\n"
+    (output_root / "manifest.json").write_text(payload, encoding="utf-8")
+    (output_root / DEFAULT_MANIFEST).write_text(payload, encoding="utf-8")
+    return manifest
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Derive paired C0-C6 controls exclusively from paper_core_seeded_v2 worlds."
+    )
+    parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
+    parser.add_argument("--source-dataset-root", default=str(DEFAULT_SOURCE))
+    parser.add_argument("--source-split", default=SPLIT)
+    parser.add_argument("--family", action="append", choices=PAPER_FAMILIES)
+    parser.add_argument("--examples-per-family", type=int, default=20)
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--no-validate", action="store_true")
     return parser
@@ -982,30 +1234,22 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    if args.all_families:
-        manifest = build_dataset(
-            output_root=Path(args.output),
-            examples_per_family=args.examples_per_family,
-            start_seed=args.start_seed,
-            overwrite=args.overwrite,
-            validate=not args.no_validate,
-        )
-    else:
-        case_specs = tuple(_parse_case_spec(spec) for spec in (args.case or DEFAULT_CASES))
-        manifest = build_case_dataset(
-            output_root=Path(args.output),
-            source_dataset_root=Path(args.source_dataset_root),
-            cases=case_specs,
-            overwrite=args.overwrite,
-            validate=not args.no_validate,
-        )
+    manifest = build_seeded_v2_dataset(
+        output_root=Path(args.output),
+        source_dataset_root=Path(args.source_dataset_root),
+        source_split=args.source_split,
+        families=tuple(args.family or PAPER_FAMILIES),
+        examples_per_family=args.examples_per_family,
+        overwrite=args.overwrite,
+        validate=not args.no_validate,
+    )
     print(
         json.dumps(
             {
                 "output": str(Path(args.output)),
+                "source_dataset_root": manifest["source_dataset_root"],
                 "world_count": manifest["world_count"],
-                "case_count": manifest.get("case_count"),
-                "base_world_count": manifest.get("base_world_count"),
+                "base_world_count": manifest["base_world_count"],
                 "validation": manifest["validation"],
             },
             indent=2,

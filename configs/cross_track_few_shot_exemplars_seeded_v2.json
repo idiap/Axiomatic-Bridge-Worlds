@@ -1,0 +1,231 @@
+{
+  "exemplar_bank": "abw_cross_track_few_shot",
+  "status": "executable",
+  "data_policy": "Solved exemplars are drawn from a non-test split. The public view contains only artifacts available to the matching direct condition. Candidates are exemplar answers for the few-shot prompt and are not drawn from the test_public split.",
+  "view_condition": "cross_track",
+  "output_representation": "abw_dsl",
+  "dataset_root": "dataset/abw-formal-nl-core",
+  "source_split": "dev",
+  "families": [
+    "predicate_invention",
+    "lemma_invention",
+    "invariant",
+    "analogy",
+    "normal_form",
+    "quotient",
+    "multi_step"
+  ],
+  "exemplars_per_family": 2,
+  "exemplars": [
+    {
+      "id": "abw_dev_0000_predicate_invention",
+      "family": "predicate_invention",
+      "source_split": "dev",
+      "world_id": "abw_dev_0000",
+      "schema_fingerprint": "4c7e154212b04647bc26719af0e557590838bd198616fd47e28f497a4bc0415e",
+      "public_nl_view": "## problem.md\n# Problem\n\nThe names are intentionally neutral so the task depends on structure, not stored background knowledge.\n\n## Public Vocabulary\n- Object kind: mav.\n- Object kind: ren.\n- Named object: mav-0 is a mav object.\n- Named object: mav-1 is a mav object.\n- Named object: ren-0 is a ren object.\n- Named object: ren-1 is a ren object.\n- Operation: shift takes a mav object and returns a mav object.\n- Operation: lift takes a ren object and returns a ren object.\n- Relation: P0 can hold of a mav object.\n- Relation: P1 can hold of a mav object.\n- Relation: P2 can hold of a ren object.\n- Relation: P3 can hold of a ren object.\n- Relation: R can hold between a mav object and a ren object.\n\n## Rules\n- If P0 holds of x, then P0 holds of the shift of x.\n- If P1 holds of x, then P1 holds of the shift of x.\n- If P2 holds of y, then P2 holds of the lift of y.\n- If P3 holds of y, then P3 holds of the lift of y.\n- If R holds between x and y, then R holds between the shift of x and the lift of y.\n\n## Task\nInvent a reusable bridge concept that captures a repeated structural pattern in the public facts and theorems.\nThen propose a lemma that makes deeper hidden targets cheaper to justify under the benchmark's proof budget.\n\n## examples.md\n# Examples\n\n## Visible Facts\n- P0 holds of mav-0.\n- P1 holds of mav-0.\n- P0 holds of mav-1.\n- P1 holds of mav-1.\n- P2 holds of ren-0.\n- P3 holds of ren-0.\n- P2 holds of ren-1.\n- P3 holds of ren-1.\n- R holds between mav-0 and ren-0.\n- R holds between mav-1 and ren-1.\n\n## Visible Targets\n- visible_step_1: R holds between the shift of mav-0 and the lift of ren-0 and P0 holds of the shift of mav-0 and P1 holds of the shift of mav-0 and P2 holds of the lift of ren-0 and P3 holds of the lift of ren-0.\n\n## theorem_cards.md\n# Theorem Cards\n\n## Visible Theorems\n- **visible_pair_step**: If R holds between x and y and P0 holds of x and P1 holds of x and P2 holds of y and P3 holds of y, then R holds between the shift of x and the lift of y.",
+      "candidate": "lemma CandLemmaAlignedStep: forall x:S0 y:S1. CandRelAligned(x, y) -> CandRelAligned(f0(x), f1(y))\ndefine CandRelAligned(x:S0, y:S1) := R(x, y) & P0(x) & P1(x) & P2(y) & P3(y)",
+      "public_artifact_hashes": {
+        "problem.md": "93a06b370dc3e8867ea22f4442e04092a2416c5c408ada2ecf0da02430b79222",
+        "examples.md": "99f2aab25a02c33a306abce1673405a055b75479b580f9808b6c0d3d3e305394",
+        "theorem_cards.md": "29d1fc229c833b455e4e336629e76d8fb7623a1881fe9b1850865620f8bc8d99"
+      },
+      "candidate_sha256": "199924b0ac70ccedc2be08133e3da2f07921e3c7d136909adb5e454b1decd548"
+    },
+    {
+      "id": "abw_dev_0007_predicate_invention",
+      "family": "predicate_invention",
+      "source_split": "dev",
+      "world_id": "abw_dev_0007",
+      "schema_fingerprint": "b86cde43d3ad49c5cb63b2b8894bdbad00e76d9dd1e62d72d8e7e34c8957b020",
+      "public_nl_view": "## problem.md\n# Problem\n\nThe names are intentionally neutral so the task depends on structure, not stored background knowledge.\n\n## Public Vocabulary\n- Object kind: mav.\n- Object kind: ren.\n- Named object: mav-0 is a mav object.\n- Named object: ren-0 is a ren object.\n- Operation: shift takes a mav object and returns a mav object.\n- Operation: lift takes a ren object and returns a ren object.\n- Relation: P0 can hold of a mav object.\n- Relation: P1 can hold of a ren object.\n- Relation: P2 can hold of a ren object.\n- Relation: R can hold between a mav object and a ren object.\n- Relation: N0 can hold of a mav object.\n- Relation: N1 can hold of a ren object.\n- Relation: N2 can hold of a mav object.\n- Relation: N3 can hold of a ren object.\n\n## Rules\n- If P0 holds of x, then P0 holds of the shift of x.\n- If P1 holds of y, then P1 holds of the lift of y.\n- If P2 holds of y, then P2 holds of the lift of y.\n- If R holds between x and y, then R holds between the shift of x and the lift of y.\n- If N0 holds of u, then N0 holds of the shift of u.\n- If N1 holds of u, then N1 holds of the lift of u.\n- If N2 holds of u, then N2 holds of the shift of u.\n- If N3 holds of u, then N3 holds of the lift of u.\n\n## Task\nInvent a reusable bridge concept that captures a repeated structural pattern in the public facts and theorems.\nThen propose a lemma that makes deeper hidden targets cheaper to justify under the benchmark's proof budget.\n\n## examples.md\n# Examples\n\n## Visible Facts\n- P0 holds of mav-0.\n- P1 holds of ren-0.\n- P2 holds of ren-0.\n- R holds between mav-0 and ren-0.\n- N0 holds of mav-0.\n- N1 holds of ren-0.\n- N2 holds of mav-0.\n- N3 holds of ren-0.\n\n## Visible Targets\n- visible_step_1: R holds between the shift of mav-0 and the lift of ren-0 and P0 holds of the shift of mav-0 and P1 holds of the lift of ren-0 and P2 holds of the lift of ren-0.\n\n## theorem_cards.md\n# Theorem Cards\n\n## Visible Theorems\n- **visible_pair_step**: If R holds between x and y and P0 holds of x and P1 holds of y and P2 holds of y, then R holds between the shift of x and the lift of y.",
+      "candidate": "lemma CandLemmaAlignedStep: forall x:S0 y:S1. CandRelAligned(x, y) -> CandRelAligned(f0(x), f1(y))\ndefine CandRelAligned(x:S0, y:S1) := R(x, y) & P0(x) & P1(y) & P2(y)",
+      "public_artifact_hashes": {
+        "problem.md": "0dfb749eff118a2b96a9cc8596b9303d71dff008ff8e6f0b34ca91b84b161260",
+        "examples.md": "5e2584462757d8fac02e16f32956cd410bb1ce5a1774b16dec94d2f528ed62f8",
+        "theorem_cards.md": "6f96df06fab6c6006efd67b2e55e5ef85d56ff5c9cf86c6a9ec6a698e372326c"
+      },
+      "candidate_sha256": "96e47e8d6d2eb0f0e9473850b0d0e8db5dbcf4e5475fd0ce618619dd034808d1"
+    },
+    {
+      "id": "abw_dev_0001_lemma_invention",
+      "family": "lemma_invention",
+      "source_split": "dev",
+      "world_id": "abw_dev_0001",
+      "schema_fingerprint": "ff197f51417a8503f18e4a380ea58ef23653b34682df76769ac7ccc2d609c22f",
+      "public_nl_view": "## problem.md\n# Problem\n\nThe names are intentionally neutral so the task depends on structure, not stored background knowledge.\n\n## Public Vocabulary\n- Object kind: mav.\n- Named object: mav-0 is a mav object.\n- Named object: mav-1 is a mav object.\n- Operation: shift takes a mav object and returns a mav object.\n- Operation: lift takes a mav object and returns a mav object.\n- Operation: glide takes a mav object and returns a mav object.\n- Relation: A can hold of a mav object.\n- Relation: B can hold of a mav object.\n- Relation: C can hold of a mav object.\n- Relation: D can hold of a mav object.\n- Relation: Noise0 can hold of a mav object.\n- Relation: Noise1 can hold of a mav object.\n- Relation: Noise2 can hold of a mav object.\n\n## Rules\n- If A holds of x, then B holds of the shift of x.\n- If B holds of x, then C holds of the lift of x.\n- If C holds of x, then D holds of the glide of x.\n- If Noise0 holds of x, then Noise0 holds of the shift of x.\n- If Noise1 holds of x, then Noise1 holds of the shift of x.\n- If Noise2 holds of x, then Noise2 holds of the shift of x.\n\n## Task\nInvent a reusable shortcut lemma that collapses a repeated proof pattern in the public theory.\nThen use it to make deeper hidden targets cheaper to justify under the benchmark's proof budget.\n\n## examples.md\n# Examples\n\n## Visible Facts\n- A holds of mav-0.\n- A holds of mav-1.\n- Noise0 holds of mav-0.\n- Noise1 holds of mav-0.\n- Noise2 holds of mav-0.\n\n## Visible Targets\n- visible_chain: D holds of the glide of the lift of the shift of mav-0.\n\n## theorem_cards.md\n# Theorem Cards\n\n## Visible Theorems\n- **prefix_shortcut**: If A holds of x, then C holds of the lift of the shift of x.",
+      "candidate": "lemma CandLemmaChain3: forall x:S0. A(x) -> D(h(g(f(x))))",
+      "public_artifact_hashes": {
+        "problem.md": "2e008288a661594bd2d554aa206cb8ffce40d36b5a75e5dd9d76544cb2dd49f6",
+        "examples.md": "d18f5c27ffe60035f7d4d6aebaab6f599d16c75d34403285f1ec88a577c18f18",
+        "theorem_cards.md": "a96d6a5137bcad6004a96c481f7e33a7f5934263b4f6fc141d5dfff982ae4a5d"
+      },
+      "candidate_sha256": "58d8e2a9985337c0c0dc3eabbaf0eeb245233644a9ed2100aed1f7fa74305192"
+    },
+    {
+      "id": "abw_dev_0008_lemma_invention",
+      "family": "lemma_invention",
+      "source_split": "dev",
+      "world_id": "abw_dev_0008",
+      "schema_fingerprint": "a6410734d044701e83307ea754f06bf4d2bcc44f2ccf174079b5de9d1097f9da",
+      "public_nl_view": "## problem.md\n# Problem\n\nThe names are intentionally neutral so the task depends on structure, not stored background knowledge.\n\n## Public Vocabulary\n- Object kind: mav.\n- Named object: mav-0 is a mav object.\n- Named object: mav-1 is a mav object.\n- Operation: shift takes a mav object and returns a mav object.\n- Operation: lift takes a mav object and returns a mav object.\n- Operation: glide takes a mav object and returns a mav object.\n- Relation: A can hold of a mav object.\n- Relation: B can hold of a mav object.\n- Relation: C can hold of a mav object.\n- Relation: D can hold of a mav object.\n- Relation: Noise0 can hold of a mav object.\n- Relation: Noise1 can hold of a mav object.\n\n## Rules\n- If A holds of x, then B holds of the shift of x.\n- If B holds of x, then C holds of the lift of x.\n- If C holds of x, then D holds of the glide of x.\n- If Noise0 holds of x, then Noise0 holds of the shift of x.\n- If Noise1 holds of x, then Noise1 holds of the shift of x.\n\n## Task\nInvent a reusable shortcut lemma that collapses a repeated proof pattern in the public theory.\nThen use it to make deeper hidden targets cheaper to justify under the benchmark's proof budget.\n\n## examples.md\n# Examples\n\n## Visible Facts\n- A holds of mav-0.\n- A holds of mav-1.\n- Noise0 holds of mav-0.\n- Noise1 holds of mav-0.\n\n## Visible Targets\n- visible_chain: D holds of the glide of the lift of the shift of mav-0.\n\n## theorem_cards.md\n# Theorem Cards\n\n## Visible Theorems\n- **suffix_shortcut**: If B holds of x, then D holds of the glide of the lift of x.",
+      "candidate": "lemma CandLemmaChain3: forall x:S0. A(x) -> D(h(g(f(x))))",
+      "public_artifact_hashes": {
+        "problem.md": "c2cedcf90aa85b725cbf1c39e85481afcdf76ba06e365d9bd7a3c6ab88f555de",
+        "examples.md": "ba0f91becf38168b145b61a952364537de29025ac5021466ab1ff9c296e6ce8d",
+        "theorem_cards.md": "bfa465f3d52df5301a003653169c41d3ba9cf1b8903d788637bdae349a8f0ced"
+      },
+      "candidate_sha256": "58d8e2a9985337c0c0dc3eabbaf0eeb245233644a9ed2100aed1f7fa74305192"
+    },
+    {
+      "id": "abw_dev_0003_invariant",
+      "family": "invariant",
+      "source_split": "dev",
+      "world_id": "abw_dev_0003",
+      "schema_fingerprint": "7665e3b59254a5eacfb65850057a7af8b2fb01f9cfcace7c13b0953e480ea5b2",
+      "public_nl_view": "## problem.md\n# Problem\n\nThe names are intentionally neutral so the task depends on structure, not stored background knowledge.\n\n## Public Vocabulary\n- Object kind: mav.\n- Named object: mav-0 is a mav object.\n- Named object: mav-1 is a mav object.\n- Operation: shift takes a mav object and returns a mav object.\n- Operation: lift takes a mav object and returns a mav object.\n- Relation: A can hold of a mav object.\n- Relation: B can hold of a mav object.\n- Relation: C can hold of a mav object.\n- Relation: Noise0 can hold of a mav object.\n- Relation: Noise1 can hold of a mav object.\n\n## Rules\n- If A holds of x, then A holds of the shift of x.\n- If B holds of x, then B holds of the shift of x.\n- If C holds of x, then C holds of the shift of x.\n- If A holds of x, then A holds of the lift of x.\n- If B holds of x, then B holds of the lift of x.\n- If C holds of x, then C holds of the lift of x.\n- If Noise0 holds of x, then Noise0 holds of the shift of x.\n- If Noise1 holds of x, then Noise1 holds of the shift of x.\n\n## Task\nInvent a reusable bridge concept that captures a repeated structural pattern in the public facts and theorems.\nThen propose a lemma that makes deeper hidden targets cheaper to justify under the benchmark's proof budget.\n\n## examples.md\n# Examples\n\n## Visible Facts\n- A holds of mav-0.\n- B holds of mav-0.\n- C holds of mav-0.\n- A holds of mav-1.\n- B holds of mav-1.\n- C holds of mav-1.\n- Noise0 holds of mav-0.\n- Noise1 holds of mav-0.\n\n## Visible Targets\n- visible_stable_step: A holds of the shift of mav-0 and B holds of the shift of mav-0 and C holds of the shift of mav-0.\n\n## theorem_cards.md\n# Theorem Cards\n\n## Visible Theorems\n- **ab_step**: If A holds of x and B holds of x, then A holds of the shift of x.",
+      "candidate": "lemma CandLemmaStableStep: forall x:S0. CandRelStableBundle(x) -> CandRelStableBundle(step(x))\nlemma CandLemmaStableJump: forall x:S0. CandRelStableBundle(x) -> CandRelStableBundle(jump(x))\ndefine CandRelStableBundle(x:S0) := A(x) & B(x) & C(x)",
+      "public_artifact_hashes": {
+        "problem.md": "b57376c4eb9151c72c9e78540b230ac362baf692f13199f62e7168b5f58690cd",
+        "examples.md": "3aebcc6303fd9b632ec407919ae28480152df95cf4c7552e2d91860f6686e626",
+        "theorem_cards.md": "c171303c45dadfa3f44840b62d17c44617a295048b9e9e69dda76973bb8d548f"
+      },
+      "candidate_sha256": "748abc5745d4e3c3ee79e0861370825a9e66aa2a101a74e677349c04565c84cb"
+    },
+    {
+      "id": "abw_dev_0010_invariant",
+      "family": "invariant",
+      "source_split": "dev",
+      "world_id": "abw_dev_0010",
+      "schema_fingerprint": "37de2d8e8ce3692419955dd70ce27242503d7d578f7afd30ac9d69f820411e31",
+      "public_nl_view": "## problem.md\n# Problem\n\nThe names are intentionally neutral so the task depends on structure, not stored background knowledge.\n\n## Public Vocabulary\n- Object kind: mav.\n- Named object: mav-0 is a mav object.\n- Operation: shift takes a mav object and returns a mav object.\n- Operation: lift takes a mav object and returns a mav object.\n- Relation: A can hold of a mav object.\n- Relation: B can hold of a mav object.\n- Relation: C can hold of a mav object.\n- Relation: D can hold of a mav object.\n- Relation: E can hold of a mav object.\n- Relation: Noise0 can hold of a mav object.\n- Relation: Noise1 can hold of a mav object.\n\n## Rules\n- If A holds of x, then A holds of the shift of x.\n- If B holds of x, then B holds of the shift of x.\n- If C holds of x, then C holds of the shift of x.\n- If D holds of x, then D holds of the shift of x.\n- If E holds of x, then E holds of the shift of x.\n- If A holds of x, then A holds of the lift of x.\n- If B holds of x, then B holds of the lift of x.\n- If C holds of x, then C holds of the lift of x.\n- If D holds of x, then D holds of the lift of x.\n- If E holds of x, then E holds of the lift of x.\n- If Noise0 holds of x, then Noise0 holds of the shift of x.\n- If Noise1 holds of x, then Noise1 holds of the shift of x.\n\n## Task\nInvent a reusable bridge concept that captures a repeated structural pattern in the public facts and theorems.\nThen propose a lemma that makes deeper hidden targets cheaper to justify under the benchmark's proof budget.\n\n## examples.md\n# Examples\n\n## Visible Facts\n- A holds of mav-0.\n- B holds of mav-0.\n- C holds of mav-0.\n- D holds of mav-0.\n- E holds of mav-0.\n- Noise0 holds of mav-0.\n- Noise1 holds of mav-0.\n\n## Visible Targets\n- visible_stable_step: A holds of the shift of mav-0 and B holds of the shift of mav-0 and C holds of the shift of mav-0 and D holds of the shift of mav-0 and E holds of the shift of mav-0.\n\n## theorem_cards.md\n# Theorem Cards\n\n## Visible Theorems\n- **ab_step**: If A holds of x and B holds of x, then A holds of the shift of x.",
+      "candidate": "lemma CandLemmaStableStep: forall x:S0. CandRelStableBundle(x) -> CandRelStableBundle(step(x))\nlemma CandLemmaStableJump: forall x:S0. CandRelStableBundle(x) -> CandRelStableBundle(jump(x))\ndefine CandRelStableBundle(x:S0) := A(x) & B(x) & C(x) & D(x) & E(x)",
+      "public_artifact_hashes": {
+        "problem.md": "14842486b343ce44f972c0960688614823938f20d1aec57b070fa65ccdd1a2db",
+        "examples.md": "2f0cdf46964d70ee5660539a4a331abce044e993c1869ad19cc0b52166aebfcb",
+        "theorem_cards.md": "c171303c45dadfa3f44840b62d17c44617a295048b9e9e69dda76973bb8d548f"
+      },
+      "candidate_sha256": "d13e4bfa8e9b49f6a34313ab8f4f1398aeb931532d6814d7eb69c3b5fd24f49e"
+    },
+    {
+      "id": "abw_dev_0002_analogy",
+      "family": "analogy",
+      "source_split": "dev",
+      "world_id": "abw_dev_0002",
+      "schema_fingerprint": "cbff08a139ab38adbea117a6c150e3c4a7ddf790f3a97a9213e37a468811dec8",
+      "public_nl_view": "## problem.md\n# Problem\n\nThe names are intentionally neutral so the task depends on structure, not stored background knowledge.\n\n## Public Vocabulary\n\n## Rules\n\n## Public Theories\n\n### Theory Left\n#### Vocabulary\n- Object kind: mav.\n- Named object: mav-0 is a mav object.\n- Operation: shift takes a mav object and returns a mav object.\n- Operation: lift takes a mav object and returns a mav object.\n- Operation: glide takes a mav object and returns a mav object.\n- Relation: LP0 can hold of a mav object.\n- Relation: LP1 can hold of a mav object.\n- Relation: LD0 can hold of a mav object.\n#### Rules\n- If LP0 holds of x, then LP1 holds of the shift of x.\n- If LP1 holds of x, then LP0 holds of the lift of x.\n- If LD0 holds of x, then LD0 holds of the glide of x.\n\n### Theory Right\n#### Vocabulary\n- Object kind: ren.\n- Named object: ren-0 is a ren object.\n- Operation: turn takes a ren object and returns a ren object.\n- Operation: seal takes a ren object and returns a ren object.\n- Operation: flick takes a ren object and returns a ren object.\n- Relation: RP0 can hold of a ren object.\n- Relation: RP1 can hold of a ren object.\n- Relation: RD0 can hold of a ren object.\n#### Rules\n- If RP0 holds of y, then RP1 holds of the turn of y.\n- If RP1 holds of y, then RP0 holds of the seal of y.\n- If RD0 holds of y, then RD0 holds of the flick of y.\n\n## Task\nInfer a structure-preserving mapping between the public theories.\nThen use that mapping to transport visible source-theory theorems into the target theory.\n\n## examples.md\n# Examples\n\n## Visible Facts\n\n## Visible Targets\n\n## Theory Facts\n\n### Theory Left\n- LP0 holds of mav-0.\n- LD0 holds of mav-0.\n\n### Theory Right\n- RP0 holds of ren-0.\n- RD0 holds of ren-0.\n\n## theorem_cards.md\n# Theorem Cards\n\n## Visible Theorems\n\n## Theory Theorems\n\n### Theory Left\n- **left_cycle_0**: If LP0 holds of x, then LP0 holds of the lift of the shift of x.\n- **left_cycle_1**: If LP1 holds of x, then LP1 holds of the shift of the lift of x.\n\n### Theory Right",
+      "candidate": "morphism CandMapM : Left -> Right {\n  L0 -> R0\n  LD0 -> RD0\n  LP0 -> RP0\n  LP1 -> RP1\n  l0 -> r0\n  ldf0 -> rdf0\n  lf0 -> rf0\n  lf1 -> rf1\n}",
+      "public_artifact_hashes": {
+        "problem.md": "bad6f7c6fd9bd4df44c3822e48861fdac1b7613a4f715f9ca4144d7c1c9a114b",
+        "examples.md": "9c9019241ee26933aef2b7ff2e17e50f7b70af892aabcd829a90dde2757583c6",
+        "theorem_cards.md": "872c3203b5a46932b19dcb36b89dc2cf7d3c9cd48f3a5511ed170217e22ddd88"
+      },
+      "candidate_sha256": "7e8699cfd682a5694219c331f42834127d935582bc230aab3116f19b4de9f499"
+    },
+    {
+      "id": "abw_dev_0009_analogy",
+      "family": "analogy",
+      "source_split": "dev",
+      "world_id": "abw_dev_0009",
+      "schema_fingerprint": "03deb28de19e4b4da49a9b9aee7d30b668ecbc68e19ab1b1eb57ce84563b399a",
+      "public_nl_view": "## problem.md\n# Problem\n\nThe names are intentionally neutral so the task depends on structure, not stored background knowledge.\n\n## Public Vocabulary\n\n## Rules\n\n## Public Theories\n\n### Theory Left\n#### Vocabulary\n- Object kind: mav.\n- Named object: mav-0 is a mav object.\n- Named object: mav-1 is a mav object.\n- Named object: mav-2 is a mav object.\n- Operation: shift takes a mav object and returns a mav object.\n- Operation: lift takes a mav object and returns a mav object.\n- Operation: glide takes a mav object and returns a mav object.\n- Relation: LP0 can hold of a mav object.\n- Relation: LP1 can hold of a mav object.\n- Relation: LD0 can hold of a mav object.\n#### Rules\n- If LP0 holds of x, then LP1 holds of the shift of x.\n- If LP1 holds of x, then LP0 holds of the lift of x.\n- If LD0 holds of x, then LD0 holds of the glide of x.\n\n### Theory Right\n#### Vocabulary\n- Object kind: ren.\n- Named object: ren-0 is a ren object.\n- Named object: ren-1 is a ren object.\n- Named object: ren-2 is a ren object.\n- Operation: turn takes a ren object and returns a ren object.\n- Operation: seal takes a ren object and returns a ren object.\n- Operation: flick takes a ren object and returns a ren object.\n- Relation: RP0 can hold of a ren object.\n- Relation: RP1 can hold of a ren object.\n- Relation: RD0 can hold of a ren object.\n#### Rules\n- If RP0 holds of y, then RP1 holds of the turn of y.\n- If RP1 holds of y, then RP0 holds of the seal of y.\n- If RD0 holds of y, then RD0 holds of the flick of y.\n\n## Task\nInfer a structure-preserving mapping between the public theories.\nThen use that mapping to transport visible source-theory theorems into the target theory.\n\n## examples.md\n# Examples\n\n## Visible Facts\n\n## Visible Targets\n\n## Theory Facts\n\n### Theory Left\n- LP0 holds of mav-0.\n- LP0 holds of mav-1.\n- LP0 holds of mav-2.\n- LD0 holds of mav-0.\n\n### Theory Right\n- RP0 holds of ren-0.\n- RP0 holds of ren-1.\n- RP0 holds of ren-2.\n- RD0 holds of ren-0.\n\n## theorem_cards.md\n# Theorem Cards\n\n## Visible Theorems\n\n## Theory Theorems\n\n### Theory Left\n- **left_cycle_0**: If LP0 holds of x, then LP0 holds of the lift of the shift of x.\n- **left_cycle_1**: If LP1 holds of x, then LP1 holds of the shift of the lift of x.\n\n### Theory Right",
+      "candidate": "morphism CandMapM : Left -> Right {\n  L0 -> R0\n  LD0 -> RD0\n  LP0 -> RP0\n  LP1 -> RP1\n  l0 -> r0\n  l1 -> r1\n  l2 -> r2\n  ldf0 -> rdf0\n  lf0 -> rf0\n  lf1 -> rf1\n}",
+      "public_artifact_hashes": {
+        "problem.md": "e985eb8b5ca7af01a118caf7ee82abc5e25ff178e23f84d130e63596751271b7",
+        "examples.md": "91c80a2666e2c341ba504cc236b34b47401476a1e06ccc2b349876361935c648",
+        "theorem_cards.md": "872c3203b5a46932b19dcb36b89dc2cf7d3c9cd48f3a5511ed170217e22ddd88"
+      },
+      "candidate_sha256": "4f2dfe8c26e8c6f33dc27ddea3bd5402af331d36b22e6f989ab7b6f8e68e86ac"
+    },
+    {
+      "id": "abw_dev_0005_normal_form",
+      "family": "normal_form",
+      "source_split": "dev",
+      "world_id": "abw_dev_0005",
+      "schema_fingerprint": "47090c6ef99fa3d57c398c828b3c05017fb9aab9e0bd2c17fe3b022cec2f7eee",
+      "public_nl_view": "## problem.md\n# Problem\n\nThe names are intentionally neutral so the task depends on structure, not stored background knowledge.\n\n## Public Vocabulary\n- Object kind: mav.\n- Named object: mav-0 is a mav object.\n- Operation: shift takes a mav object and returns a mav object.\n- Operation: lift takes a mav object and returns a mav object.\n- Operation: glide takes a mav object and returns a mav object.\n- Relation: Done0 can hold of a mav object.\n- Relation: Done1 can hold of a mav object.\n- Relation: Ready0 can hold of a mav object.\n- Relation: Ready1 can hold of a mav object.\n- Relation: Marker0 can hold of a mav object.\n- Relation: Marker1 can hold of a mav object.\n\n## Rules\n- The expression the shift of the lift of x rewrites to the glide of x.\n- The expression the glide of the glide of x rewrites to the glide of x.\n- If Marker0 holds of x, then Ready0 holds of the glide of x.\n- If Marker1 holds of x, then Ready1 holds of the glide of x.\n- If Ready0 holds of x, then Done0 holds of x.\n- If Ready1 holds of x, then Done1 holds of x.\n\n## Task\nInvent a reusable bridge concept that captures a repeated structural pattern in the public facts and theorems.\nThen propose a lemma that makes deeper hidden targets cheaper to justify under the benchmark's proof budget.\n\n## examples.md\n# Examples\n\n## Visible Facts\n- Marker0 holds of mav-0.\n- Marker1 holds of mav-0.\n\n## Visible Targets\n- visible_done_ab_z: Done0 holds of the shift of the lift of mav-0.\n\n## theorem_cards.md\n# Theorem Cards\n\n## Visible Theorems",
+      "candidate": "lemma CandLemmaDone0NormalShortcut: forall x:T. Marker0(x) -> Done0(n(x))\nlemma CandLemmaDone1NormalShortcut: forall x:T. Marker1(x) -> Done1(n(x))\ndefine CandRelNormal(x:T) := n(x) = x",
+      "public_artifact_hashes": {
+        "problem.md": "4bb312aa264a21743721ed6b19d4ce2f0cfd991c7ddcf90a2e80b3ddc7a2788b",
+        "examples.md": "23a755efe50d1eec63fa0b3284ff8a149dc58dfdb044043058b78769da1a5ce1",
+        "theorem_cards.md": "0039582209e1e548171b96e9dbd52892e860aad22dc6f78a099ad1def16dcdd1"
+      },
+      "candidate_sha256": "f3ae75378cdd045d68273bce494d88f317c278f85319791ad276c9cf91af7643"
+    },
+    {
+      "id": "abw_dev_0012_normal_form",
+      "family": "normal_form",
+      "source_split": "dev",
+      "world_id": "abw_dev_0012",
+      "schema_fingerprint": "449d440795153474ffb2d44d805bba3f85b2bb4dc9ec4c2aa3ecb9f2a6210aa6",
+      "public_nl_view": "## problem.md\n# Problem\n\nThe names are intentionally neutral so the task depends on structure, not stored background knowledge.\n\n## Public Vocabulary\n- Object kind: mav.\n- Named object: mav-0 is a mav object.\n- Operation: shift takes a mav object and returns a mav object.\n- Operation: lift takes a mav object and returns a mav object.\n- Operation: glide takes a mav object and returns a mav object.\n- Operation: turn takes a mav object and returns a mav object.\n- Relation: Done0 can hold of a mav object.\n- Relation: Ready0 can hold of a mav object.\n- Relation: Marker0 can hold of a mav object.\n\n## Rules\n- The expression the shift of the glide of x rewrites to the turn of x.\n- The expression the lift of the shift of x rewrites to the turn of x.\n- The expression the glide of the lift of x rewrites to the turn of x.\n- The expression the turn of the turn of x rewrites to the turn of x.\n- If Marker0 holds of x, then Ready0 holds of the turn of x.\n- If Ready0 holds of x, then Done0 holds of x.\n\n## Task\nInvent a reusable bridge concept that captures a repeated structural pattern in the public facts and theorems.\nThen propose a lemma that makes deeper hidden targets cheaper to justify under the benchmark's proof budget.\n\n## examples.md\n# Examples\n\n## Visible Facts\n- Marker0 holds of mav-0.\n\n## Visible Targets\n- visible_done_ab_z: Done0 holds of the shift of the glide of mav-0.\n\n## theorem_cards.md\n# Theorem Cards\n\n## Visible Theorems",
+      "candidate": "lemma CandLemmaDone0NormalShortcut: forall x:T. Marker0(x) -> Done0(n(x))\ndefine CandRelNormal(x:T) := n(x) = x",
+      "public_artifact_hashes": {
+        "problem.md": "ca1e6792b0cf837149a10a0a8c0c7d5003c48c45a8777804b9233aa66f5127dc",
+        "examples.md": "954bddaa90388d8a549158a28b1b463fd9b66c942245534c4bd50b39ee6351e6",
+        "theorem_cards.md": "0039582209e1e548171b96e9dbd52892e860aad22dc6f78a099ad1def16dcdd1"
+      },
+      "candidate_sha256": "7c0a8a928f1e2d757733482aea3a45228dda53f4e0bad36640a310cf3968062f"
+    },
+    {
+      "id": "abw_dev_0004_quotient",
+      "family": "quotient",
+      "source_split": "dev",
+      "world_id": "abw_dev_0004",
+      "schema_fingerprint": "7668484832d76ccda7e8d6b3e2c1c19d67dc23464dda6433d2485a57abaf74f7",
+      "public_nl_view": "## problem.md\n# Problem\n\nThe names are intentionally neutral so the task depends on structure, not stored background knowledge.\n\n## Public Vocabulary\n- Object kind: mav.\n- Named object: mav-0 is a mav object.\n- Named object: mav-1 is a mav object.\n- Named object: mav-2 is a mav object.\n- Operation: shift takes a mav object and returns a mav object.\n- Operation: lift takes a mav object and returns a mav object.\n- Relation: Good0 can hold of a mav object.\n- Relation: R can hold between a mav object and a mav object.\n- Relation: Tag0 can hold of a mav object.\n\n## Rules\n- R holds between x and x.\n- If R holds between x and y, then R holds between y and x.\n- If R holds between x and y and R holds between y and z, then R holds between x and z.\n- R holds between x and the shift of x.\n- If R holds between x and y and Good0 holds of x, then Good0 holds of y.\n- If R holds between x and y, then R holds between the lift of x and the lift of y.\n\n## Task\nInvent a reusable bridge concept that captures a repeated structural pattern in the public facts and theorems.\nThen propose a lemma that makes deeper hidden targets cheaper to justify under the benchmark's proof budget.\n\n## examples.md\n# Examples\n\n## Visible Facts\n- Good0 holds of mav-0.\n- R holds between mav-0 and mav-1.\n- R holds between mav-0 and mav-2.\n- Tag0 holds of mav-0.\n\n## Visible Targets\n- visible_good_norm: Good0 holds of the shift of mav-0.\n\n## theorem_cards.md\n# Theorem Cards\n\n## Visible Theorems",
+      "candidate": "lemma CandLemmaGood0NormTransfer: forall x:S0. Good0(x) -> Good0(norm(x))\nlemma CandLemmaStepClass: forall x:S0 y:S0. CandRelSameClass(x, y) -> CandRelSameClass(step(x), step(y))\ndefine CandRelSameClass(x:S0, y:S0) := R(x, y)\ndefine CandRelRepresentative0(x:S0) := norm(x) = x",
+      "public_artifact_hashes": {
+        "problem.md": "805c45688888a135bb2133379298a799d8fc561716a14a740e57416dc92b6d8d",
+        "examples.md": "d47131223829465a7e9b5a6ce0a377b2b61c5e10eb567a7524bf996b0bd11200",
+        "theorem_cards.md": "0039582209e1e548171b96e9dbd52892e860aad22dc6f78a099ad1def16dcdd1"
+      },
+      "candidate_sha256": "15cb6af7066911495ce26f0f2c2a09fa5e331673c49a6a94a544ee2700df683b"
+    },
+    {
+      "id": "abw_dev_0011_quotient",
+      "family": "quotient",
+      "source_split": "dev",
+      "world_id": "abw_dev_0011",
+      "schema_fingerprint": "61a7eb6c18ab0b23a2023ac46170c06c8a6810d2c9ec92f19605c1a048267bea",
+      "public_nl_view": "## problem.md\n# Problem\n\nThe names are intentionally neutral so the task depends on structure, not stored background knowledge.\n\n## Public Vocabulary\n- Object kind: mav.\n- Named object: mav-0 is a mav object.\n- Named object: mav-1 is a mav object.\n- Named object: mav-2 is a mav object.\n- Operation: shift takes a mav object and returns a mav object.\n- Operation: lift takes a mav object and returns a mav object.\n- Relation: Good0 can hold of a mav object.\n- Relation: Good1 can hold of a mav object.\n- Relation: Good2 can hold of a mav object.\n- Relation: R can hold between a mav object and a mav object.\n- Relation: Tag0 can hold of a mav object.\n- Relation: Tag1 can hold of a mav object.\n- Relation: Tag2 can hold of a mav object.\n\n## Rules\n- R holds between x and x.\n- If R holds between x and y, then R holds between y and x.\n- If R holds between x and y and R holds between y and z, then R holds between x and z.\n- R holds between x and the shift of x.\n- If R holds between x and y and Good0 holds of x, then Good0 holds of y.\n- If R holds between x and y and Good1 holds of x, then Good1 holds of y.\n- If R holds between x and y and Good2 holds of x, then Good2 holds of y.\n- If R holds between x and y, then R holds between the lift of x and the lift of y.\n\n## Task\nInvent a reusable bridge concept that captures a repeated structural pattern in the public facts and theorems.\nThen propose a lemma that makes deeper hidden targets cheaper to justify under the benchmark's proof budget.\n\n## examples.md\n# Examples\n\n## Visible Facts\n- Good0 holds of mav-0.\n- Good1 holds of mav-0.\n- Good2 holds of mav-0.\n- R holds between mav-0 and mav-1.\n- R holds between mav-0 and mav-2.\n- Tag0 holds of mav-0.\n- Tag1 holds of mav-0.\n- Tag2 holds of mav-0.\n\n## Visible Targets\n- visible_good_norm: Good0 holds of the shift of mav-0.\n\n## theorem_cards.md\n# Theorem Cards\n\n## Visible Theorems",
+      "candidate": "lemma CandLemmaGood0NormTransfer: forall x:S0. Good0(x) -> Good0(norm(x))\nlemma CandLemmaGood1NormTransfer: forall x:S0. Good1(x) -> Good1(norm(x))\nlemma CandLemmaGood2NormTransfer: forall x:S0. Good2(x) -> Good2(norm(x))\nlemma CandLemmaStepClass: forall x:S0 y:S0. CandRelSameClass(x, y) -> CandRelSameClass(step(x), step(y))\ndefine CandRelSameClass(x:S0, y:S0) := R(x, y)\ndefine CandRelRepresentative0(x:S0) := norm(x) = x",
+      "public_artifact_hashes": {
+        "problem.md": "a4c664b45d5cba56440a6370cd663b0bed479a4915da53d75f313d0c14f3ec2c",
+        "examples.md": "ed57024c22a6d0ab0d5137d4279da88bdbce4bb96b3681f1c01134c952470bad",
+        "theorem_cards.md": "0039582209e1e548171b96e9dbd52892e860aad22dc6f78a099ad1def16dcdd1"
+      },
+      "candidate_sha256": "e6f1fb9291c17aa49b0edb88a76f11a6783a4d25b8300110e36699b88746f248"
+    },
+    {
+      "id": "abw_dev_0006_multi_step",
+      "family": "multi_step",
+      "source_split": "dev",
+      "world_id": "abw_dev_0006",
+      "schema_fingerprint": "6d4a734aec4af8d857328f5bcfb325beb413d87217065734f918b7d975c8fda6",
+      "public_nl_view": "## problem.md\n# Problem\n\nThe names are intentionally neutral so the task depends on structure, not stored background knowledge.\n\n## Public Vocabulary\n- Object kind: mav.\n- Object kind: ren.\n- Object kind: tal.\n- Named object: mav-0 is a mav object.\n- Named object: ren-0 is a ren object.\n- Operation: shift takes a mav object and returns a mav object.\n- Operation: lift takes a ren object and returns a ren object.\n- Operation: glide takes a mav object and a ren object and returns a tal object.\n- Relation: A0 can hold of a mav object.\n- Relation: A1 can hold of a mav object.\n- Relation: A2 can hold of a mav object.\n- Relation: B0 can hold of a ren object.\n- Relation: B1 can hold of a ren object.\n- Relation: B2 can hold of a ren object.\n- Relation: C0 can hold of a tal object.\n- Relation: C1 can hold of a tal object.\n- Relation: C2 can hold of a tal object.\n- Relation: R can hold between a mav object and a ren object.\n\n## Rules\n- If A0 holds of x, then A0 holds of the shift of x.\n- If A1 holds of x, then A1 holds of the shift of x.\n- If A2 holds of x, then A2 holds of the shift of x.\n- If B0 holds of y, then B0 holds of the lift of y.\n- If B1 holds of y, then B1 holds of the lift of y.\n- If B2 holds of y, then B2 holds of the lift of y.\n- If R holds between x and y, then R holds between the shift of x and the lift of y.\n- If A0 holds of x and A1 holds of x and A2 holds of x and B0 holds of y and B1 holds of y and B2 holds of y and R holds between x and y, then C0 holds of the glide of x and y.\n- If C0 holds of z, then C1 holds of z.\n- If C1 holds of z, then C2 holds of z.\n\n## Task\nInvent a reusable bridge concept that captures a repeated structural pattern in the public facts and theorems.\nThen propose a lemma that makes deeper hidden targets cheaper to justify under the benchmark's proof budget.\n\n## examples.md\n# Examples\n\n## Visible Facts\n- A0 holds of mav-0.\n- A1 holds of mav-0.\n- A2 holds of mav-0.\n- B0 holds of ren-0.\n- B1 holds of ren-0.\n- B2 holds of ren-0.\n- R holds between mav-0 and ren-0.\n\n## Visible Targets\n- visible_k_one: C2 holds of the glide of the shift of mav-0 and the lift of ren-0.\n\n## theorem_cards.md\n# Theorem Cards\n\n## Visible Theorems",
+      "candidate": "lemma CandLemmaPairedStep: forall x:S0 y:S1. CandRelPairedGood(x, y) -> CandRelPairedGood(f(x), g(y))\nlemma CandLemmaConstructedIsFinal: forall x:S0 y:S1. CandRelPairedGood(x, y) -> C2(h(x, y))\nlemma CandLemmaConstructedGoodIntro: forall x:S0 y:S1. CandRelPairedGood(x, y) -> CandRelConstructedGood(h(x, y))\ndefine CandRelPairedGood(x:S0, y:S1) := A0(x) & A1(x) & A2(x) & B0(y) & B1(y) & B2(y) & R(x, y)\ndefine CandRelConstructedGood(z:S2) := C0(z) & C2(z)",
+      "public_artifact_hashes": {
+        "problem.md": "924d2b26688ef0f6e9084d39b4dde0ab833cdf2147533d94a9e2e722a1b5240e",
+        "examples.md": "ad0b2397706038ff5274e70b3f11e2d93e4af2e54a5936be2b2527cfa7d1b58a",
+        "theorem_cards.md": "0039582209e1e548171b96e9dbd52892e860aad22dc6f78a099ad1def16dcdd1"
+      },
+      "candidate_sha256": "036a74380e043114b242496add86c5d497df0b43f3188f624c34ac14b684c4c2"
+    },
+    {
+      "id": "abw_dev_0013_multi_step",
+      "family": "multi_step",
+      "source_split": "dev",
+      "world_id": "abw_dev_0013",
+      "schema_fingerprint": "e62c2c56f28e757a9b3e60e7ce4b3153537601705c4972cbe3c187d24368936f",
+      "public_nl_view": "## problem.md\n# Problem\n\nThe names are intentionally neutral so the task depends on structure, not stored background knowledge.\n\n## Public Vocabulary\n- Object kind: mav.\n- Object kind: ren.\n- Object kind: tal.\n- Named object: mav-0 is a mav object.\n- Named object: ren-0 is a ren object.\n- Operation: shift takes a mav object and returns a mav object.\n- Operation: lift takes a ren object and returns a ren object.\n- Operation: glide takes a mav object and a ren object and returns a tal object.\n- Relation: A0 can hold of a mav object.\n- Relation: A1 can hold of a mav object.\n- Relation: A2 can hold of a mav object.\n- Relation: B0 can hold of a ren object.\n- Relation: B1 can hold of a ren object.\n- Relation: C0 can hold of a tal object.\n- Relation: C1 can hold of a tal object.\n- Relation: C2 can hold of a tal object.\n- Relation: C3 can hold of a tal object.\n- Relation: R can hold between a mav object and a ren object.\n- Relation: Noise0 can hold of a mav object.\n- Relation: Noise1 can hold of a mav object.\n\n## Rules\n- If A0 holds of x, then A0 holds of the shift of x.\n- If A1 holds of x, then A1 holds of the shift of x.\n- If A2 holds of x, then A2 holds of the shift of x.\n- If B0 holds of y, then B0 holds of the lift of y.\n- If B1 holds of y, then B1 holds of the lift of y.\n- If R holds between x and y, then R holds between the shift of x and the lift of y.\n- If A0 holds of x and A1 holds of x and A2 holds of x and B0 holds of y and B1 holds of y and R holds between x and y, then C0 holds of the glide of x and y.\n- If C0 holds of z, then C1 holds of z.\n- If C1 holds of z, then C2 holds of z.\n- If C2 holds of z, then C3 holds of z.\n- If Noise0 holds of x, then Noise0 holds of the shift of x.\n- If Noise1 holds of x, then Noise1 holds of the shift of x.\n\n## Task\nInvent a reusable bridge concept that captures a repeated structural pattern in the public facts and theorems.\nThen propose a lemma that makes deeper hidden targets cheaper to justify under the benchmark's proof budget.\n\n## examples.md\n# Examples\n\n## Visible Facts\n- A0 holds of mav-0.\n- A1 holds of mav-0.\n- A2 holds of mav-0.\n- B0 holds of ren-0.\n- B1 holds of ren-0.\n- R holds between mav-0 and ren-0.\n- Noise0 holds of mav-0.\n- Noise1 holds of mav-0.\n\n## Visible Targets\n- visible_k_one: C3 holds of the glide of the shift of mav-0 and the lift of ren-0.\n\n## theorem_cards.md\n# Theorem Cards\n\n## Visible Theorems",
+      "candidate": "lemma CandLemmaPairedStep: forall x:S0 y:S1. CandRelPairedGood(x, y) -> CandRelPairedGood(f(x), g(y))\nlemma CandLemmaConstructedIsFinal: forall x:S0 y:S1. CandRelPairedGood(x, y) -> C3(h(x, y))\nlemma CandLemmaConstructedGoodIntro: forall x:S0 y:S1. CandRelPairedGood(x, y) -> CandRelConstructedGood(h(x, y))\ndefine CandRelPairedGood(x:S0, y:S1) := A0(x) & A1(x) & A2(x) & B0(y) & B1(y) & R(x, y)\ndefine CandRelConstructedGood(z:S2) := C0(z) & C3(z)",
+      "public_artifact_hashes": {
+        "problem.md": "27587e4792b6a87f938e794b30e7c9e3c4938623b8f061e3fc4417652b5c49a7",
+        "examples.md": "ee00c6bad317caacf28a21b4c4c6fe6ae34394b85c315753d934d2f8475f4a23",
+        "theorem_cards.md": "0039582209e1e548171b96e9dbd52892e860aad22dc6f78a099ad1def16dcdd1"
+      },
+      "candidate_sha256": "ae0c63e700402853ade55086f3138bbabb12cf8731c63a037c7401e1032f4f49"
+    }
+  ]
+}

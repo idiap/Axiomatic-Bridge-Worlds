@@ -6,18 +6,11 @@
 #
 # SPDX-License-Identifier: MIT
 
-# Structurally diverse paper-core release. The generator rejects repeated
-# schemas and repeated public task content across both splits.
-
-dataset_name: axiomatic_bridge_worlds_paper_core_seeded_v2
+dataset_name: axiomatic_bridge_worlds_test_smoke
 version: 0.4.0
 dsl_version: abw-dsl-v2
-output_dir: dataset/abw-formal-nl-core
-
-views:
-  - formal
-  - natural_language
-
+output_dir: artifacts/test_smoke
+views: [formal, natural_language]
 families:
   - predicate_invention
   - lemma_invention
@@ -26,28 +19,20 @@ families:
   - quotient
   - normal_form
   - multi_step
-
 splits:
   dev:
-    examples_per_family: 5
-    start_seed: 4100
+    examples_per_family: 1
   test_public:
-    examples_per_family: 50
-    start_seed: 3114
-
-start_seed: 3100
+    examples_per_family: 1
+start_seed: 100
 max_term_depth: 3
-proof_budget: 4
-hidden_steps:
-  - 2
-  - 3
+proof_budget: 3
+hidden_steps: [2, 3]
 include_distractors: true
-
 interactive:
   enabled: true
   query_budget: 20
   countermodels: true
-
 prover_backend:
   name: local
   command: []

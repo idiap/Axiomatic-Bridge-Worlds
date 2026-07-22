@@ -20,7 +20,7 @@ For each packaged world in the selected slice:
 1. expose only the public artifacts to the target system
 2. collect the candidate it emits
 3. score that candidate against the hidden bridge and hidden targets
-4. aggregate the results into report-ready metrics
+4. aggregate the results into JSON-ready metrics
 
 This file therefore plays the role of benchmark harness rather than theorem
 prover. It is the layer that turns a symbolic world generator plus evaluator
@@ -111,7 +111,7 @@ class TargetInvocationResult:
 
     The benchmark needs more than raw stdout. It also needs timing, return
     status, decoded metadata, and compact excerpts that can be surfaced later
-    in debugging reports without storing arbitrary large process output.
+    in stored JSON results without retaining arbitrary large process output.
     """
 
     status: str
@@ -125,10 +125,10 @@ class TargetInvocationResult:
 
 
 def _truncate_text(text: str, *, limit: int = MAX_CAPTURE_CHARS) -> str:
-    """Bound captured process output so benchmark reports stay inspectable.
+    """Bound captured process output so benchmark JSON stays inspectable.
 
     Large stderr dumps are useful during debugging but terrible inside stored
-    reports. This helper preserves the existence of the message while keeping
+    results. This helper preserves the existence of the message while keeping
     the artifact size manageable.
     """
 
@@ -254,7 +254,7 @@ def _blank_score(error_message: str) -> dict[str, Any]:
     """Build a score-shaped failure payload for integration-side breakdowns.
 
     This lets invocation failures, malformed target outputs, and scorer-side
-    exceptions all occupy the same structural slot in the final report.
+    exceptions all occupy the same structural slot in the final JSON output.
     """
 
     return {
@@ -381,9 +381,9 @@ def _invoke_target(
 
 
 def _candidate_digest(candidate_text: str | None) -> str | None:
-    """Hash the submitted candidate so reports can identify repeats compactly.
+    """Hash the submitted candidate so JSON results identify repeats compactly.
 
-    The benchmark report wants a stable submission fingerprint without bloating
+    The benchmark output needs a stable submission fingerprint without bloating
     the artifact by embedding full candidate text for every world.
     """
 
@@ -393,9 +393,9 @@ def _candidate_digest(candidate_text: str | None) -> str | None:
 
 
 def _candidate_artifact(candidate_text: str | None) -> dict[str, Any]:
-    """Return the report-side raw candidate payload and compact excerpt.
+    """Return the stored raw candidate payload and compact excerpt.
 
-    Benchmark reports are reproducibility artifacts, so they preserve the exact
+    Benchmark JSON results are reproducibility artifacts, so they preserve the exact
     candidate text emitted by the target process. The bounded excerpt gives
     downstream inspectors a small field for tables and failure summaries
     without re-parsing the full text.
@@ -493,9 +493,9 @@ def _percentile(values: Sequence[float], quantile: float) -> float:
 def _aggregate_records(records: Sequence[dict[str, Any]]) -> dict[str, Any]:
     """Aggregate one scored slice into the benchmark summary structure.
 
-    This is the dataset-level scoring rule for ABW benchmark reports. It
+    This is the dataset-level scoring rule for ABW benchmark JSON results. It
     combines semantic metrics, validity, coverage, and latency into the summary
-    shape later consumed by the LaTeX renderer and any downstream analysis.
+    shape consumed directly by downstream analysis.
 
     Important design choice:
     failed worlds stay in the denominator. That keeps the benchmark honest
@@ -535,8 +535,7 @@ def _aggregate_records(records: Sequence[dict[str, Any]]) -> dict[str, Any]:
 def _group_summary(records: Sequence[dict[str, Any]], key: str) -> dict[str, Any]:
     """Aggregate the benchmark slice by a grouping key such as split or family.
 
-    The returned mapping powers the familiar per-split and per-family summary
-    tables found in the benchmark report surface.
+    The returned mapping stores per-split and per-family JSON summaries.
     """
 
     labels = sorted({str(record[key]) for record in records})
@@ -559,12 +558,12 @@ def run_benchmark(
     backend_command: Sequence[str] = (),
     output_path: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Run one target system across a packaged dataset and return the full report.
+    """Run one target system across a packaged dataset and return JSON-ready results.
 
     This is the main public benchmark entrypoint. It discovers the selected
     worlds, invokes the target once per world, routes candidate text through
     the evaluator, records per-world artifacts, and finally emits a benchmark
-    report that can be serialized directly or rendered into LaTeX.
+    result object that can be serialized directly as JSON.
     """
 
     root = Path(dataset_root).resolve()
@@ -578,7 +577,7 @@ def run_benchmark(
     records: list[dict[str, Any]] = []
     for world in worlds:
         # Each world is treated as an independent protocol round so the final
-        # report can localize crashes, malformed outputs, and scoring failures.
+        # JSON output can localize crashes, malformed outputs, and scoring failures.
         invocation = _invoke_target(
             world,
             target_command=target_command,
@@ -626,7 +625,7 @@ def run_benchmark(
             }
         )
 
-    report = {
+    results = {
         "task": {
             "name": "axiomatic_bridge_worlds",
             "protocol_version": BENCHMARK_PROTOCOL_VERSION,
@@ -659,5 +658,5 @@ def run_benchmark(
     if output_path is not None:
         output = Path(output_path)
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    return report
+        output.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+    return results

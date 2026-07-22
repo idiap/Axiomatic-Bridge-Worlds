@@ -35,7 +35,7 @@ class DatasetConfig:
     split_start_seeds: dict[str, int] | None = None
     views: tuple[str, ...] = ("formal", "natural_language")
     dsl_version: str = BASE_DSL_VERSION
-    output_dir: str = "datasets/generated"
+    output_dir: str = "dataset/generated"
     start_seed: int = 0
     max_term_depth: int = 3
     proof_budget: int = 3
@@ -155,7 +155,7 @@ def load_config(path: str | Path) -> DatasetConfig:
         split_start_seeds=split_start_seeds,
         views=_parse_views(payload),
         dsl_version=str(payload.get("dsl_version", default_dsl_version)),
-        output_dir=str(payload.get("output_dir", "datasets/generated")),
+        output_dir=str(payload.get("output_dir", "dataset/generated")),
         start_seed=int(payload.get("start_seed", 0)),
         max_term_depth=int(payload.get("max_term_depth", 3)),
         proof_budget=int(payload.get("proof_budget", 3)),

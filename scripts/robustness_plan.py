@@ -13,7 +13,7 @@ than a paper-run provider script. This planner emits the commands needed to:
 
 1. build conservative perturbed copies of a packaged ABW dataset
 2. run the same target adapter on the original and perturbed datasets
-3. save paired benchmark reports for later summarization
+3. save paired benchmark JSON results for later analysis
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from typing import Any, Sequence
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = REPO_ROOT / "artifacts" / "abw_robustness" / "robustness_plan.json"
-DEFAULT_REPORT_DIR = REPO_ROOT / "artifacts" / "abw_robustness"
+DEFAULT_RESULTS_DIR = REPO_ROOT / "artifacts" / "abw_robustness"
 DEFAULT_PERTURBED_ROOT = REPO_ROOT / "artifacts" / "abw_perturbed"
 PAPER_FAMILIES = (
     "predicate_invention",
@@ -70,7 +70,7 @@ def _perturbation_command(base_dataset_root: Path, perturbed_dataset_root: Path,
 def _benchmark_command(
     *,
     dataset_root: Path,
-    report_path: Path,
+    results_path: Path,
     split: str,
     family: str,
     target_command: Sequence[str],
@@ -93,7 +93,7 @@ def _benchmark_command(
         "--timeout-seconds",
         str(timeout_seconds),
         "--output",
-        str(report_path),
+        str(results_path),
     ]
     if limit is not None:
         command.extend(["--limit", str(limit)])
@@ -108,7 +108,7 @@ def _run_entry(
     *,
     role: str,
     dataset_root: Path,
-    report_dir: Path,
+    results_dir: Path,
     split: str,
     family: str,
     target_command: Sequence[str],
@@ -122,10 +122,10 @@ def _run_entry(
     if perturbation:
         stem_parts.append(_safe_name(perturbation))
     stem_parts.extend([_safe_name(split), _safe_name(family)])
-    report_path = report_dir / ("_".join(stem_parts) + "_report.json")
+    results_path = results_dir / ("_".join(stem_parts) + "_results.json")
     command = _benchmark_command(
         dataset_root=dataset_root,
-        report_path=report_path,
+        results_path=results_path,
         split=split,
         family=family,
         target_command=target_command,
@@ -141,7 +141,7 @@ def _run_entry(
         "family": family,
         "perturbation": perturbation,
         "dataset_root": str(dataset_root),
-        "report": str(report_path),
+        "results": str(results_path),
         "command": command,
         "shell": _shell_join(command),
     }
@@ -151,7 +151,7 @@ def build_robustness_plan(
     *,
     base_dataset_root: Path,
     perturbed_dataset_root: Path,
-    report_dir: Path,
+    results_dir: Path,
     split: str,
     families: Sequence[str],
     perturbations: Sequence[str],
@@ -188,7 +188,7 @@ def build_robustness_plan(
         _run_entry(
             role="original",
             dataset_root=base_dataset_root,
-            report_dir=report_dir,
+            results_dir=results_dir,
             split=split,
             family=family,
             target_command=target_command,
@@ -204,7 +204,7 @@ def build_robustness_plan(
             role="perturbed",
             perturbation=perturbation,
             dataset_root=perturbed_dataset_root / perturbation,
-            report_dir=report_dir,
+            results_dir=results_dir,
             split=split,
             family=family,
             target_command=target_command,
@@ -220,7 +220,7 @@ def build_robustness_plan(
         "experiment": "abw_generic_robustness",
         "base_dataset_root": str(base_dataset_root),
         "perturbed_dataset_root": str(perturbed_dataset_root),
-        "report_dir": str(report_dir),
+        "results_dir": str(results_dir),
         "split": split,
         "families": list(families),
         "perturbations": list(perturbations),
@@ -248,7 +248,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Build a generic ABW robustness benchmark plan.")
     parser.add_argument("--base-dataset-root", required=True)
     parser.add_argument("--perturbed-dataset-root", default=str(DEFAULT_PERTURBED_ROOT))
-    parser.add_argument("--report-dir", default=str(DEFAULT_REPORT_DIR))
+    parser.add_argument("--results-dir", default=str(DEFAULT_RESULTS_DIR))
     parser.add_argument("--split", default="test_public")
     parser.add_argument("--family", action="append", default=[])
     parser.add_argument("--perturbation", action="append", default=[])
@@ -268,7 +268,7 @@ def main(argv: list[str] | None = None) -> int:
     plan = build_robustness_plan(
         base_dataset_root=Path(args.base_dataset_root),
         perturbed_dataset_root=Path(args.perturbed_dataset_root),
-        report_dir=Path(args.report_dir),
+        results_dir=Path(args.results_dir),
         split=args.split,
         families=families,
         perturbations=perturbations,

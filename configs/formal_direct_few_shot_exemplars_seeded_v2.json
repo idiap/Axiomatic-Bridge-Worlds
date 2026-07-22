@@ -1,0 +1,259 @@
+{
+  "exemplar_bank": "abw_formal_direct_few_shot",
+  "status": "executable",
+  "data_policy": "Solved exemplars are drawn from a non-test split. The public view contains only artifacts available to the matching direct condition. Candidates are exemplar answers for the few-shot prompt and are not drawn from the test_public split.",
+  "view_condition": "formal_direct",
+  "output_representation": "abw_dsl",
+  "dataset_root": "dataset/abw-formal-nl-core",
+  "source_split": "dev",
+  "families": [
+    "predicate_invention",
+    "lemma_invention",
+    "invariant",
+    "analogy",
+    "normal_form",
+    "quotient",
+    "multi_step"
+  ],
+  "exemplars_per_family": 2,
+  "exemplars": [
+    {
+      "id": "abw_dev_0000_predicate_invention",
+      "family": "predicate_invention",
+      "source_split": "dev",
+      "world_id": "abw_dev_0000",
+      "schema_fingerprint": "4c7e154212b04647bc26719af0e557590838bd198616fd47e28f497a4bc0415e",
+      "public_formal_view": "## signature.json\n{\n  \"sorts\": [\n    {\n      \"name\": \"S0\"\n    },\n    {\n      \"name\": \"S1\"\n    }\n  ],\n  \"constants\": [\n    {\n      \"name\": \"c0\",\n      \"sort\": \"S0\"\n    },\n    {\n      \"name\": \"c1\",\n      \"sort\": \"S0\"\n    },\n    {\n      \"name\": \"d0\",\n      \"sort\": \"S1\"\n    },\n    {\n      \"name\": \"d1\",\n      \"sort\": \"S1\"\n    }\n  ],\n  \"functions\": [\n    {\n      \"name\": \"f0\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    },\n    {\n      \"name\": \"f1\",\n      \"input_sorts\": [\n        \"S1\"\n      ],\n      \"output_sort\": \"S1\"\n    }\n  ],\n  \"predicates\": [\n    {\n      \"name\": \"P0\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"P1\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"P2\",\n      \"input_sorts\": [\n        \"S1\"\n      ]\n    },\n    {\n      \"name\": \"P3\",\n      \"input_sorts\": [\n        \"S1\"\n      ]\n    },\n    {\n      \"name\": \"R\",\n      \"input_sorts\": [\n        \"S0\",\n        \"S1\"\n      ]\n    }\n  ]\n}\n\n## axioms.abw\naxiom p0_step: forall x:S0. P0(x) -> P0(f0(x))\naxiom p1_step: forall x:S0. P1(x) -> P1(f0(x))\naxiom p2_step: forall y:S1. P2(y) -> P2(f1(y))\naxiom p3_step: forall y:S1. P3(y) -> P3(f1(y))\naxiom r_step: forall x:S0 y:S1. R(x, y) -> R(f0(x), f1(y))\n\n## visible_facts.abw\nfact base_p0_0: P0(c0)\nfact base_p1_0: P1(c0)\nfact base_p0_1: P0(c1)\nfact base_p1_1: P1(c1)\nfact base_p2_0: P2(d0)\nfact base_p3_0: P3(d0)\nfact base_p2_1: P2(d1)\nfact base_p3_1: P3(d1)\nfact base_r_0: R(c0, d0)\nfact base_r_1: R(c1, d1)\n\n## visible_theorems.abw\ntheorem visible_pair_step: forall x:S0 y:S1. R(x, y) & P0(x) & P1(x) & P2(y) & P3(y) -> R(f0(x), f1(y))\n\n## targets_visible.abw\ngoal visible_step_1: R(f0(c0), f1(d0)) & P0(f0(c0)) & P1(f0(c0)) & P2(f1(d0)) & P3(f1(d0))",
+      "candidate": "lemma CandLemmaAlignedStep: forall x:S0 y:S1. CandRelAligned(x, y) -> CandRelAligned(f0(x), f1(y))\ndefine CandRelAligned(x:S0, y:S1) := R(x, y) & P0(x) & P1(x) & P2(y) & P3(y)",
+      "public_artifact_hashes": {
+        "signature.json": "a0c3d24fda271ca086a5247658e3d895881e1db89152670310ab26c65f1a8103",
+        "axioms.abw": "36e1355692db2a106ee3ce39e41c82aab5a8108bb3de028f27492a3633452a75",
+        "visible_facts.abw": "0ecca3a601c7db75b2d49f41f4c8f49caf21f6ce590f972336ece0fc1b6dc695",
+        "visible_theorems.abw": "2ba042d7af906658c85e29dde302f93590e2840653965b2df05ccb8ed47946ab",
+        "targets_visible.abw": "ac3214b99878369c994f1e61a9dd50fdc97a0327100ff5069ac6f2d6a2eaeaf2"
+      },
+      "candidate_sha256": "199924b0ac70ccedc2be08133e3da2f07921e3c7d136909adb5e454b1decd548"
+    },
+    {
+      "id": "abw_dev_0007_predicate_invention",
+      "family": "predicate_invention",
+      "source_split": "dev",
+      "world_id": "abw_dev_0007",
+      "schema_fingerprint": "b86cde43d3ad49c5cb63b2b8894bdbad00e76d9dd1e62d72d8e7e34c8957b020",
+      "public_formal_view": "## signature.json\n{\n  \"sorts\": [\n    {\n      \"name\": \"S0\"\n    },\n    {\n      \"name\": \"S1\"\n    }\n  ],\n  \"constants\": [\n    {\n      \"name\": \"c0\",\n      \"sort\": \"S0\"\n    },\n    {\n      \"name\": \"d0\",\n      \"sort\": \"S1\"\n    }\n  ],\n  \"functions\": [\n    {\n      \"name\": \"f0\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    },\n    {\n      \"name\": \"f1\",\n      \"input_sorts\": [\n        \"S1\"\n      ],\n      \"output_sort\": \"S1\"\n    }\n  ],\n  \"predicates\": [\n    {\n      \"name\": \"P0\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"P1\",\n      \"input_sorts\": [\n        \"S1\"\n      ]\n    },\n    {\n      \"name\": \"P2\",\n      \"input_sorts\": [\n        \"S1\"\n      ]\n    },\n    {\n      \"name\": \"R\",\n      \"input_sorts\": [\n        \"S0\",\n        \"S1\"\n      ]\n    },\n    {\n      \"name\": \"N0\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"N1\",\n      \"input_sorts\": [\n        \"S1\"\n      ]\n    },\n    {\n      \"name\": \"N2\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"N3\",\n      \"input_sorts\": [\n        \"S1\"\n      ]\n    }\n  ]\n}\n\n## axioms.abw\naxiom p0_step: forall x:S0. P0(x) -> P0(f0(x))\naxiom p1_step: forall y:S1. P1(y) -> P1(f1(y))\naxiom p2_step: forall y:S1. P2(y) -> P2(f1(y))\naxiom r_step: forall x:S0 y:S1. R(x, y) -> R(f0(x), f1(y))\naxiom noise_0_step: forall u:S0. N0(u) -> N0(f0(u))\naxiom noise_1_step: forall u:S1. N1(u) -> N1(f1(u))\naxiom noise_2_step: forall u:S0. N2(u) -> N2(f0(u))\naxiom noise_3_step: forall u:S1. N3(u) -> N3(f1(u))\n\n## visible_facts.abw\nfact base_p0_0: P0(c0)\nfact base_p1_0: P1(d0)\nfact base_p2_0: P2(d0)\nfact base_r_0: R(c0, d0)\nfact noise_0_base: N0(c0)\nfact noise_1_base: N1(d0)\nfact noise_2_base: N2(c0)\nfact noise_3_base: N3(d0)\n\n## visible_theorems.abw\ntheorem visible_pair_step: forall x:S0 y:S1. R(x, y) & P0(x) & P1(y) & P2(y) -> R(f0(x), f1(y))\n\n## targets_visible.abw\ngoal visible_step_1: R(f0(c0), f1(d0)) & P0(f0(c0)) & P1(f1(d0)) & P2(f1(d0))",
+      "candidate": "lemma CandLemmaAlignedStep: forall x:S0 y:S1. CandRelAligned(x, y) -> CandRelAligned(f0(x), f1(y))\ndefine CandRelAligned(x:S0, y:S1) := R(x, y) & P0(x) & P1(y) & P2(y)",
+      "public_artifact_hashes": {
+        "signature.json": "2f727b915ef9c7525599a87a90972b36ffe0d4dec73ab104544ead332b3a9577",
+        "axioms.abw": "10ed61426ca7d2abaa94607517ce36333018b7817b9f9c2689c4219bf38e89dd",
+        "visible_facts.abw": "13be3e57bc6aca4b3a46df63464030f19e1410e5d770619463826be09b3226f2",
+        "visible_theorems.abw": "2d8caf805db9548dcbbd346da96d0b52eec69bd96d660d14e432eaa91eb4aa40",
+        "targets_visible.abw": "c238fd217a51fcaee0dbb888e39c21e3a68d26920c1150fe6b6ecd481317079a"
+      },
+      "candidate_sha256": "96e47e8d6d2eb0f0e9473850b0d0e8db5dbcf4e5475fd0ce618619dd034808d1"
+    },
+    {
+      "id": "abw_dev_0001_lemma_invention",
+      "family": "lemma_invention",
+      "source_split": "dev",
+      "world_id": "abw_dev_0001",
+      "schema_fingerprint": "ff197f51417a8503f18e4a380ea58ef23653b34682df76769ac7ccc2d609c22f",
+      "public_formal_view": "## signature.json\n{\n  \"sorts\": [\n    {\n      \"name\": \"S0\"\n    }\n  ],\n  \"constants\": [\n    {\n      \"name\": \"c0\",\n      \"sort\": \"S0\"\n    },\n    {\n      \"name\": \"c1\",\n      \"sort\": \"S0\"\n    }\n  ],\n  \"functions\": [\n    {\n      \"name\": \"f\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    },\n    {\n      \"name\": \"g\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    },\n    {\n      \"name\": \"h\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    }\n  ],\n  \"predicates\": [\n    {\n      \"name\": \"A\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"B\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"C\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"D\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Noise0\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Noise1\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Noise2\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    }\n  ]\n}\n\n## axioms.abw\naxiom a_to_b: forall x:S0. A(x) -> B(f(x))\naxiom b_to_c: forall x:S0. B(x) -> C(g(x))\naxiom c_to_d: forall x:S0. C(x) -> D(h(x))\naxiom noise_0_step: forall x:S0. Noise0(x) -> Noise0(f(x))\naxiom noise_1_step: forall x:S0. Noise1(x) -> Noise1(f(x))\naxiom noise_2_step: forall x:S0. Noise2(x) -> Noise2(f(x))\n\n## visible_facts.abw\nfact base_0: A(c0)\nfact base_1: A(c1)\nfact noise_0: Noise0(c0)\nfact noise_1: Noise1(c0)\nfact noise_2: Noise2(c0)\n\n## visible_theorems.abw\ntheorem prefix_shortcut: forall x:S0. A(x) -> C(g(f(x)))\n\n## targets_visible.abw\ngoal visible_chain: D(h(g(f(c0))))",
+      "candidate": "lemma CandLemmaChain3: forall x:S0. A(x) -> D(h(g(f(x))))",
+      "public_artifact_hashes": {
+        "signature.json": "2f7b143fc2eb4f0c93622ab8c412c7a4506a2ad13c794b34091312fb1bda8627",
+        "axioms.abw": "4b7d32589d5c8e282aa8d2c9c815bb66e4043f12c78c0ccca7a031584287c9ce",
+        "visible_facts.abw": "c1ddfb12a7c9a1ac119fc48420e4ceed42ea3ba37fcf74ef241927bb8bb049db",
+        "visible_theorems.abw": "8604aafa68ba9cc79c4c412702a947956fbbbbb0c29fd48b68f3f1139da66a64",
+        "targets_visible.abw": "7afd7697d8e860866ba930d4b91cbe5cfd4524e5e3393a8f2eae0065e226b519"
+      },
+      "candidate_sha256": "58d8e2a9985337c0c0dc3eabbaf0eeb245233644a9ed2100aed1f7fa74305192"
+    },
+    {
+      "id": "abw_dev_0008_lemma_invention",
+      "family": "lemma_invention",
+      "source_split": "dev",
+      "world_id": "abw_dev_0008",
+      "schema_fingerprint": "a6410734d044701e83307ea754f06bf4d2bcc44f2ccf174079b5de9d1097f9da",
+      "public_formal_view": "## signature.json\n{\n  \"sorts\": [\n    {\n      \"name\": \"S0\"\n    }\n  ],\n  \"constants\": [\n    {\n      \"name\": \"c0\",\n      \"sort\": \"S0\"\n    },\n    {\n      \"name\": \"c1\",\n      \"sort\": \"S0\"\n    }\n  ],\n  \"functions\": [\n    {\n      \"name\": \"f\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    },\n    {\n      \"name\": \"g\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    },\n    {\n      \"name\": \"h\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    }\n  ],\n  \"predicates\": [\n    {\n      \"name\": \"A\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"B\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"C\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"D\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Noise0\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Noise1\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    }\n  ]\n}\n\n## axioms.abw\naxiom a_to_b: forall x:S0. A(x) -> B(f(x))\naxiom b_to_c: forall x:S0. B(x) -> C(g(x))\naxiom c_to_d: forall x:S0. C(x) -> D(h(x))\naxiom noise_0_step: forall x:S0. Noise0(x) -> Noise0(f(x))\naxiom noise_1_step: forall x:S0. Noise1(x) -> Noise1(f(x))\n\n## visible_facts.abw\nfact base_0: A(c0)\nfact base_1: A(c1)\nfact noise_0: Noise0(c0)\nfact noise_1: Noise1(c0)\n\n## visible_theorems.abw\ntheorem suffix_shortcut: forall x:S0. B(x) -> D(h(g(x)))\n\n## targets_visible.abw\ngoal visible_chain: D(h(g(f(c0))))",
+      "candidate": "lemma CandLemmaChain3: forall x:S0. A(x) -> D(h(g(f(x))))",
+      "public_artifact_hashes": {
+        "signature.json": "e5f60d665e424ed386f71e13a21d5889f95ee8485c91a988f9315d8f77d62834",
+        "axioms.abw": "d6289aaebd0faba1c66c4bbf4f0f3a0fd5a71cefdbf2dc296f10e36c7ebee22d",
+        "visible_facts.abw": "7fd5ed93ca73537629b107423598d4e626a19edce5e3b72b4bb538c8a699e5bb",
+        "visible_theorems.abw": "2aad7bedcb73c3eba58b2018b15c91379029615fd22aeb132bfcbc89c2da4706",
+        "targets_visible.abw": "7afd7697d8e860866ba930d4b91cbe5cfd4524e5e3393a8f2eae0065e226b519"
+      },
+      "candidate_sha256": "58d8e2a9985337c0c0dc3eabbaf0eeb245233644a9ed2100aed1f7fa74305192"
+    },
+    {
+      "id": "abw_dev_0003_invariant",
+      "family": "invariant",
+      "source_split": "dev",
+      "world_id": "abw_dev_0003",
+      "schema_fingerprint": "7665e3b59254a5eacfb65850057a7af8b2fb01f9cfcace7c13b0953e480ea5b2",
+      "public_formal_view": "## signature.json\n{\n  \"sorts\": [\n    {\n      \"name\": \"S0\"\n    }\n  ],\n  \"constants\": [\n    {\n      \"name\": \"s0\",\n      \"sort\": \"S0\"\n    },\n    {\n      \"name\": \"s1\",\n      \"sort\": \"S0\"\n    }\n  ],\n  \"functions\": [\n    {\n      \"name\": \"step\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    },\n    {\n      \"name\": \"jump\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    }\n  ],\n  \"predicates\": [\n    {\n      \"name\": \"A\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"B\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"C\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Noise0\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Noise1\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    }\n  ]\n}\n\n## axioms.abw\naxiom a_step: forall x:S0. A(x) -> A(step(x))\naxiom b_step: forall x:S0. B(x) -> B(step(x))\naxiom c_step: forall x:S0. C(x) -> C(step(x))\naxiom a_jump: forall x:S0. A(x) -> A(jump(x))\naxiom b_jump: forall x:S0. B(x) -> B(jump(x))\naxiom c_jump: forall x:S0. C(x) -> C(jump(x))\naxiom noise_0_step: forall x:S0. Noise0(x) -> Noise0(step(x))\naxiom noise_1_step: forall x:S0. Noise1(x) -> Noise1(step(x))\n\n## visible_facts.abw\nfact base_a_0: A(s0)\nfact base_b_0: B(s0)\nfact base_c_0: C(s0)\nfact base_a_1: A(s1)\nfact base_b_1: B(s1)\nfact base_c_1: C(s1)\nfact noise_0: Noise0(s0)\nfact noise_1: Noise1(s0)\n\n## visible_theorems.abw\ntheorem ab_step: forall x:S0. A(x) & B(x) -> A(step(x))\n\n## targets_visible.abw\ngoal visible_stable_step: A(step(s0)) & B(step(s0)) & C(step(s0))",
+      "candidate": "lemma CandLemmaStableStep: forall x:S0. CandRelStableBundle(x) -> CandRelStableBundle(step(x))\nlemma CandLemmaStableJump: forall x:S0. CandRelStableBundle(x) -> CandRelStableBundle(jump(x))\ndefine CandRelStableBundle(x:S0) := A(x) & B(x) & C(x)",
+      "public_artifact_hashes": {
+        "signature.json": "5548931c225f08b39095bd5060610e4f1f8c5bd894776d4d112e13c8aad77613",
+        "axioms.abw": "be3427f8f012245cc5ea709c5281d085cd199b1553acd74167ef54ba633622be",
+        "visible_facts.abw": "8b307d89868cb881c2cca2a7a26c8d6d7ba3873a97f57193b10e87ba14d67e7f",
+        "visible_theorems.abw": "e49f3add4aa064d254495f74c6b17edf4235b2dce0f1e04975d2f524fbdfc059",
+        "targets_visible.abw": "92cc40f44817375966edf4113d2701d17d18f89d3466f3f1a704a54735f7f157"
+      },
+      "candidate_sha256": "748abc5745d4e3c3ee79e0861370825a9e66aa2a101a74e677349c04565c84cb"
+    },
+    {
+      "id": "abw_dev_0010_invariant",
+      "family": "invariant",
+      "source_split": "dev",
+      "world_id": "abw_dev_0010",
+      "schema_fingerprint": "37de2d8e8ce3692419955dd70ce27242503d7d578f7afd30ac9d69f820411e31",
+      "public_formal_view": "## signature.json\n{\n  \"sorts\": [\n    {\n      \"name\": \"S0\"\n    }\n  ],\n  \"constants\": [\n    {\n      \"name\": \"s0\",\n      \"sort\": \"S0\"\n    }\n  ],\n  \"functions\": [\n    {\n      \"name\": \"step\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    },\n    {\n      \"name\": \"jump\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    }\n  ],\n  \"predicates\": [\n    {\n      \"name\": \"A\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"B\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"C\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"D\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"E\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Noise0\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Noise1\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    }\n  ]\n}\n\n## axioms.abw\naxiom a_step: forall x:S0. A(x) -> A(step(x))\naxiom b_step: forall x:S0. B(x) -> B(step(x))\naxiom c_step: forall x:S0. C(x) -> C(step(x))\naxiom d_step: forall x:S0. D(x) -> D(step(x))\naxiom e_step: forall x:S0. E(x) -> E(step(x))\naxiom a_jump: forall x:S0. A(x) -> A(jump(x))\naxiom b_jump: forall x:S0. B(x) -> B(jump(x))\naxiom c_jump: forall x:S0. C(x) -> C(jump(x))\naxiom d_jump: forall x:S0. D(x) -> D(jump(x))\naxiom e_jump: forall x:S0. E(x) -> E(jump(x))\naxiom noise_0_step: forall x:S0. Noise0(x) -> Noise0(step(x))\naxiom noise_1_step: forall x:S0. Noise1(x) -> Noise1(step(x))\n\n## visible_facts.abw\nfact base_a_0: A(s0)\nfact base_b_0: B(s0)\nfact base_c_0: C(s0)\nfact base_d_0: D(s0)\nfact base_e_0: E(s0)\nfact noise_0: Noise0(s0)\nfact noise_1: Noise1(s0)\n\n## visible_theorems.abw\ntheorem ab_step: forall x:S0. A(x) & B(x) -> A(step(x))\n\n## targets_visible.abw\ngoal visible_stable_step: A(step(s0)) & B(step(s0)) & C(step(s0)) & D(step(s0)) & E(step(s0))",
+      "candidate": "lemma CandLemmaStableStep: forall x:S0. CandRelStableBundle(x) -> CandRelStableBundle(step(x))\nlemma CandLemmaStableJump: forall x:S0. CandRelStableBundle(x) -> CandRelStableBundle(jump(x))\ndefine CandRelStableBundle(x:S0) := A(x) & B(x) & C(x) & D(x) & E(x)",
+      "public_artifact_hashes": {
+        "signature.json": "6370328476ce8437d451301458e44bdd9d829d2e0dd137b3ae0a3e8141b5d66a",
+        "axioms.abw": "8be95f3d0b77f79b1a0c27a23601a2e014d126d53e6cdf88b55a834ce156c25c",
+        "visible_facts.abw": "99ac760a5d92000a031811cb4a28db343304bcbd8013346c095c2353e0ce272b",
+        "visible_theorems.abw": "e49f3add4aa064d254495f74c6b17edf4235b2dce0f1e04975d2f524fbdfc059",
+        "targets_visible.abw": "8338dcd1ed526831b89c06c16b2d313d9e1f70b57dc4ae54ebb785c5a480975b"
+      },
+      "candidate_sha256": "d13e4bfa8e9b49f6a34313ab8f4f1398aeb931532d6814d7eb69c3b5fd24f49e"
+    },
+    {
+      "id": "abw_dev_0002_analogy",
+      "family": "analogy",
+      "source_split": "dev",
+      "world_id": "abw_dev_0002",
+      "schema_fingerprint": "cbff08a139ab38adbea117a6c150e3c4a7ddf790f3a97a9213e37a468811dec8",
+      "public_formal_view": "## signature.json\n{\n  \"sorts\": [],\n  \"constants\": [],\n  \"functions\": [],\n  \"predicates\": []\n}\n\n## axioms.abw\ntheory Left {\n  sort L0\n  const l0 : L0\n  func lf0 : L0 -> L0\n  func lf1 : L0 -> L0\n  func ldf0 : L0 -> L0\n  pred LP0 : L0\n  pred LP1 : L0\n  pred LD0 : L0\n  axiom left_step_0: forall x:L0. LP0(x) -> LP1(lf0(x))\n  axiom left_step_1: forall x:L0. LP1(x) -> LP0(lf1(x))\n  axiom left_decoy_0: forall x:L0. LD0(x) -> LD0(ldf0(x))\n  theorem left_cycle_0: forall x:L0. LP0(x) -> LP0(lf1(lf0(x)))\n  theorem left_cycle_1: forall x:L0. LP1(x) -> LP1(lf0(lf1(x)))\n  fact left_seed_0: LP0(l0)\n  fact left_decoy_seed_0: LD0(l0)\n}\ntheory Right {\n  sort R0\n  const r0 : R0\n  func rf0 : R0 -> R0\n  func rf1 : R0 -> R0\n  func rdf0 : R0 -> R0\n  pred RP0 : R0\n  pred RP1 : R0\n  pred RD0 : R0\n  axiom right_step_0: forall y:R0. RP0(y) -> RP1(rf0(y))\n  axiom right_step_1: forall y:R0. RP1(y) -> RP0(rf1(y))\n  axiom right_decoy_0: forall y:R0. RD0(y) -> RD0(rdf0(y))\n  fact right_seed_0: RP0(r0)\n  fact right_decoy_seed_0: RD0(r0)\n}\n\n## visible_facts.abw\n\n\n## visible_theorems.abw\n\n\n## targets_visible.abw",
+      "candidate": "morphism CandMapM : Left -> Right {\n  L0 -> R0\n  LD0 -> RD0\n  LP0 -> RP0\n  LP1 -> RP1\n  l0 -> r0\n  ldf0 -> rdf0\n  lf0 -> rf0\n  lf1 -> rf1\n}",
+      "public_artifact_hashes": {
+        "signature.json": "600d4f1188617762db67699c58469a6ab0ed82a5cbf03387cead9d47b02434b9",
+        "axioms.abw": "126ba00f3ec538caafe09d71966a681b3ee7a060a5979d0cf24bb3681e697fc7",
+        "visible_facts.abw": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "visible_theorems.abw": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "targets_visible.abw": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "candidate_sha256": "7e8699cfd682a5694219c331f42834127d935582bc230aab3116f19b4de9f499"
+    },
+    {
+      "id": "abw_dev_0009_analogy",
+      "family": "analogy",
+      "source_split": "dev",
+      "world_id": "abw_dev_0009",
+      "schema_fingerprint": "03deb28de19e4b4da49a9b9aee7d30b668ecbc68e19ab1b1eb57ce84563b399a",
+      "public_formal_view": "## signature.json\n{\n  \"sorts\": [],\n  \"constants\": [],\n  \"functions\": [],\n  \"predicates\": []\n}\n\n## axioms.abw\ntheory Left {\n  sort L0\n  const l0 : L0\n  const l1 : L0\n  const l2 : L0\n  func lf0 : L0 -> L0\n  func lf1 : L0 -> L0\n  func ldf0 : L0 -> L0\n  pred LP0 : L0\n  pred LP1 : L0\n  pred LD0 : L0\n  axiom left_step_0: forall x:L0. LP0(x) -> LP1(lf0(x))\n  axiom left_step_1: forall x:L0. LP1(x) -> LP0(lf1(x))\n  axiom left_decoy_0: forall x:L0. LD0(x) -> LD0(ldf0(x))\n  theorem left_cycle_0: forall x:L0. LP0(x) -> LP0(lf1(lf0(x)))\n  theorem left_cycle_1: forall x:L0. LP1(x) -> LP1(lf0(lf1(x)))\n  fact left_seed_0: LP0(l0)\n  fact left_seed_1: LP0(l1)\n  fact left_seed_2: LP0(l2)\n  fact left_decoy_seed_0: LD0(l0)\n}\ntheory Right {\n  sort R0\n  const r0 : R0\n  const r1 : R0\n  const r2 : R0\n  func rf0 : R0 -> R0\n  func rf1 : R0 -> R0\n  func rdf0 : R0 -> R0\n  pred RP0 : R0\n  pred RP1 : R0\n  pred RD0 : R0\n  axiom right_step_0: forall y:R0. RP0(y) -> RP1(rf0(y))\n  axiom right_step_1: forall y:R0. RP1(y) -> RP0(rf1(y))\n  axiom right_decoy_0: forall y:R0. RD0(y) -> RD0(rdf0(y))\n  fact right_seed_0: RP0(r0)\n  fact right_seed_1: RP0(r1)\n  fact right_seed_2: RP0(r2)\n  fact right_decoy_seed_0: RD0(r0)\n}\n\n## visible_facts.abw\n\n\n## visible_theorems.abw\n\n\n## targets_visible.abw",
+      "candidate": "morphism CandMapM : Left -> Right {\n  L0 -> R0\n  LD0 -> RD0\n  LP0 -> RP0\n  LP1 -> RP1\n  l0 -> r0\n  l1 -> r1\n  l2 -> r2\n  ldf0 -> rdf0\n  lf0 -> rf0\n  lf1 -> rf1\n}",
+      "public_artifact_hashes": {
+        "signature.json": "600d4f1188617762db67699c58469a6ab0ed82a5cbf03387cead9d47b02434b9",
+        "axioms.abw": "ffe6854cf01c04efe79c4cefdc51ffe0e8eef9bd683b9a08c2e31897d869f5f6",
+        "visible_facts.abw": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "visible_theorems.abw": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "targets_visible.abw": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "candidate_sha256": "4f2dfe8c26e8c6f33dc27ddea3bd5402af331d36b22e6f989ab7b6f8e68e86ac"
+    },
+    {
+      "id": "abw_dev_0005_normal_form",
+      "family": "normal_form",
+      "source_split": "dev",
+      "world_id": "abw_dev_0005",
+      "schema_fingerprint": "47090c6ef99fa3d57c398c828b3c05017fb9aab9e0bd2c17fe3b022cec2f7eee",
+      "public_formal_view": "## signature.json\n{\n  \"sorts\": [\n    {\n      \"name\": \"T\"\n    }\n  ],\n  \"constants\": [\n    {\n      \"name\": \"z0\",\n      \"sort\": \"T\"\n    }\n  ],\n  \"functions\": [\n    {\n      \"name\": \"a\",\n      \"input_sorts\": [\n        \"T\"\n      ],\n      \"output_sort\": \"T\"\n    },\n    {\n      \"name\": \"b\",\n      \"input_sorts\": [\n        \"T\"\n      ],\n      \"output_sort\": \"T\"\n    },\n    {\n      \"name\": \"n\",\n      \"input_sorts\": [\n        \"T\"\n      ],\n      \"output_sort\": \"T\"\n    }\n  ],\n  \"predicates\": [\n    {\n      \"name\": \"Done0\",\n      \"input_sorts\": [\n        \"T\"\n      ]\n    },\n    {\n      \"name\": \"Done1\",\n      \"input_sorts\": [\n        \"T\"\n      ]\n    },\n    {\n      \"name\": \"Ready0\",\n      \"input_sorts\": [\n        \"T\"\n      ]\n    },\n    {\n      \"name\": \"Ready1\",\n      \"input_sorts\": [\n        \"T\"\n      ]\n    },\n    {\n      \"name\": \"Marker0\",\n      \"input_sorts\": [\n        \"T\"\n      ]\n    },\n    {\n      \"name\": \"Marker1\",\n      \"input_sorts\": [\n        \"T\"\n      ]\n    }\n  ]\n}\n\n## axioms.abw\nrewrite r1: a(b(x)) -> n(x)\nrewrite n_idempotent: n(n(x)) -> n(x)\naxiom marker0_to_ready0: forall x:T. Marker0(x) -> Ready0(n(x))\naxiom marker1_to_ready1: forall x:T. Marker1(x) -> Ready1(n(x))\naxiom ready0_to_done0: forall x:T. Ready0(x) -> Done0(x)\naxiom ready1_to_done1: forall x:T. Ready1(x) -> Done1(x)\n\n## visible_facts.abw\nfact base_marker0_0: Marker0(z0)\nfact base_marker1_0: Marker1(z0)\n\n## visible_theorems.abw\n\n\n## targets_visible.abw\ngoal visible_done_ab_z: Done0(a(b(z0)))",
+      "candidate": "lemma CandLemmaDone0NormalShortcut: forall x:T. Marker0(x) -> Done0(n(x))\nlemma CandLemmaDone1NormalShortcut: forall x:T. Marker1(x) -> Done1(n(x))\ndefine CandRelNormal(x:T) := n(x) = x",
+      "public_artifact_hashes": {
+        "signature.json": "107b2ae1192493e59311873fb555db07289647a024a8021cf5142e2022b97f16",
+        "axioms.abw": "1013acbc41ad6879316425c7c75988180302ee3ddcbc00beeef08d9473d61fa2",
+        "visible_facts.abw": "62b0616695b9b8c80f8843c18a71cf4d3e8d20331444e3f95c31725d9cb47ae3",
+        "visible_theorems.abw": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "targets_visible.abw": "b19faee5512fcfd968bc422c671937d986a6653df509be52236f8c130fefcd25"
+      },
+      "candidate_sha256": "f3ae75378cdd045d68273bce494d88f317c278f85319791ad276c9cf91af7643"
+    },
+    {
+      "id": "abw_dev_0012_normal_form",
+      "family": "normal_form",
+      "source_split": "dev",
+      "world_id": "abw_dev_0012",
+      "schema_fingerprint": "449d440795153474ffb2d44d805bba3f85b2bb4dc9ec4c2aa3ecb9f2a6210aa6",
+      "public_formal_view": "## signature.json\n{\n  \"sorts\": [\n    {\n      \"name\": \"T\"\n    }\n  ],\n  \"constants\": [\n    {\n      \"name\": \"z0\",\n      \"sort\": \"T\"\n    }\n  ],\n  \"functions\": [\n    {\n      \"name\": \"a\",\n      \"input_sorts\": [\n        \"T\"\n      ],\n      \"output_sort\": \"T\"\n    },\n    {\n      \"name\": \"b\",\n      \"input_sorts\": [\n        \"T\"\n      ],\n      \"output_sort\": \"T\"\n    },\n    {\n      \"name\": \"c\",\n      \"input_sorts\": [\n        \"T\"\n      ],\n      \"output_sort\": \"T\"\n    },\n    {\n      \"name\": \"n\",\n      \"input_sorts\": [\n        \"T\"\n      ],\n      \"output_sort\": \"T\"\n    }\n  ],\n  \"predicates\": [\n    {\n      \"name\": \"Done0\",\n      \"input_sorts\": [\n        \"T\"\n      ]\n    },\n    {\n      \"name\": \"Ready0\",\n      \"input_sorts\": [\n        \"T\"\n      ]\n    },\n    {\n      \"name\": \"Marker0\",\n      \"input_sorts\": [\n        \"T\"\n      ]\n    }\n  ]\n}\n\n## axioms.abw\nrewrite r1: a(c(x)) -> n(x)\nrewrite r2: b(a(x)) -> n(x)\nrewrite r3: c(b(x)) -> n(x)\nrewrite n_idempotent: n(n(x)) -> n(x)\naxiom marker0_to_ready0: forall x:T. Marker0(x) -> Ready0(n(x))\naxiom ready0_to_done0: forall x:T. Ready0(x) -> Done0(x)\n\n## visible_facts.abw\nfact base_marker0_0: Marker0(z0)\n\n## visible_theorems.abw\n\n\n## targets_visible.abw\ngoal visible_done_ab_z: Done0(a(c(z0)))",
+      "candidate": "lemma CandLemmaDone0NormalShortcut: forall x:T. Marker0(x) -> Done0(n(x))\ndefine CandRelNormal(x:T) := n(x) = x",
+      "public_artifact_hashes": {
+        "signature.json": "9ae4452331ce3f8b6920e049ddc6bd12b5f60381f26c14966083c1ac43aebd3e",
+        "axioms.abw": "94cf860d3e99da66bdcdb4dc264337f81d8b2b66d5aeaf78a149710916564ffa",
+        "visible_facts.abw": "27523377c9f4a08c7650ca46feac77fea3cf3fe8710e89c89f9490e0fd1b0d8e",
+        "visible_theorems.abw": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "targets_visible.abw": "4d51c16ede52e3708d7fa8f76171855259dfe24d839e972e742381c0453f9259"
+      },
+      "candidate_sha256": "7c0a8a928f1e2d757733482aea3a45228dda53f4e0bad36640a310cf3968062f"
+    },
+    {
+      "id": "abw_dev_0004_quotient",
+      "family": "quotient",
+      "source_split": "dev",
+      "world_id": "abw_dev_0004",
+      "schema_fingerprint": "7668484832d76ccda7e8d6b3e2c1c19d67dc23464dda6433d2485a57abaf74f7",
+      "public_formal_view": "## signature.json\n{\n  \"sorts\": [\n    {\n      \"name\": \"S0\"\n    }\n  ],\n  \"constants\": [\n    {\n      \"name\": \"c0\",\n      \"sort\": \"S0\"\n    },\n    {\n      \"name\": \"a0\",\n      \"sort\": \"S0\"\n    },\n    {\n      \"name\": \"a1\",\n      \"sort\": \"S0\"\n    }\n  ],\n  \"functions\": [\n    {\n      \"name\": \"norm\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    },\n    {\n      \"name\": \"step\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    }\n  ],\n  \"predicates\": [\n    {\n      \"name\": \"Good0\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"R\",\n      \"input_sorts\": [\n        \"S0\",\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Tag0\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    }\n  ]\n}\n\n## axioms.abw\naxiom r_refl: forall x:S0. R(x, x)\naxiom r_sym: forall x:S0 y:S0. R(x, y) -> R(y, x)\naxiom r_trans: forall x:S0 y:S0 z:S0. R(x, y) & R(y, z) -> R(x, z)\naxiom norm_related: forall x:S0. R(x, norm(x))\naxiom good0_respects_r: forall x:S0 y:S0. R(x, y) & Good0(x) -> Good0(y)\naxiom step_respects_r: forall x:S0 y:S0. R(x, y) -> R(step(x), step(y))\n\n## visible_facts.abw\nfact base_good0_0: Good0(c0)\nfact alias_0: R(c0, a0)\nfact alias_1: R(c0, a1)\nfact tag_0: Tag0(c0)\n\n## visible_theorems.abw\n\n\n## targets_visible.abw\ngoal visible_good_norm: Good0(norm(c0))",
+      "candidate": "lemma CandLemmaGood0NormTransfer: forall x:S0. Good0(x) -> Good0(norm(x))\nlemma CandLemmaStepClass: forall x:S0 y:S0. CandRelSameClass(x, y) -> CandRelSameClass(step(x), step(y))\ndefine CandRelSameClass(x:S0, y:S0) := R(x, y)\ndefine CandRelRepresentative0(x:S0) := norm(x) = x",
+      "public_artifact_hashes": {
+        "signature.json": "7e7ef1f61e8e8db8859d7926bcf6f4c04603a84aaf326d08b26bbead878dfb0c",
+        "axioms.abw": "6f30c4478cd8557f82136621cdc330182e64e39f9718d863ddc178a40cdbf2ca",
+        "visible_facts.abw": "90d6de5ca4c39ed293d5979e10701a2e9695ff26a0981f4ad1e7220131e886dd",
+        "visible_theorems.abw": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "targets_visible.abw": "660b44570f8df7cfd97aee70367ef2754407f326cdd6218313e53202c68a6f2c"
+      },
+      "candidate_sha256": "15cb6af7066911495ce26f0f2c2a09fa5e331673c49a6a94a544ee2700df683b"
+    },
+    {
+      "id": "abw_dev_0011_quotient",
+      "family": "quotient",
+      "source_split": "dev",
+      "world_id": "abw_dev_0011",
+      "schema_fingerprint": "61a7eb6c18ab0b23a2023ac46170c06c8a6810d2c9ec92f19605c1a048267bea",
+      "public_formal_view": "## signature.json\n{\n  \"sorts\": [\n    {\n      \"name\": \"S0\"\n    }\n  ],\n  \"constants\": [\n    {\n      \"name\": \"c0\",\n      \"sort\": \"S0\"\n    },\n    {\n      \"name\": \"a0\",\n      \"sort\": \"S0\"\n    },\n    {\n      \"name\": \"a1\",\n      \"sort\": \"S0\"\n    }\n  ],\n  \"functions\": [\n    {\n      \"name\": \"norm\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    },\n    {\n      \"name\": \"step\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    }\n  ],\n  \"predicates\": [\n    {\n      \"name\": \"Good0\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Good1\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Good2\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"R\",\n      \"input_sorts\": [\n        \"S0\",\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Tag0\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Tag1\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Tag2\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    }\n  ]\n}\n\n## axioms.abw\naxiom r_refl: forall x:S0. R(x, x)\naxiom r_sym: forall x:S0 y:S0. R(x, y) -> R(y, x)\naxiom r_trans: forall x:S0 y:S0 z:S0. R(x, y) & R(y, z) -> R(x, z)\naxiom norm_related: forall x:S0. R(x, norm(x))\naxiom good0_respects_r: forall x:S0 y:S0. R(x, y) & Good0(x) -> Good0(y)\naxiom good1_respects_r: forall x:S0 y:S0. R(x, y) & Good1(x) -> Good1(y)\naxiom good2_respects_r: forall x:S0 y:S0. R(x, y) & Good2(x) -> Good2(y)\naxiom step_respects_r: forall x:S0 y:S0. R(x, y) -> R(step(x), step(y))\n\n## visible_facts.abw\nfact base_good0_0: Good0(c0)\nfact base_good1_0: Good1(c0)\nfact base_good2_0: Good2(c0)\nfact alias_0: R(c0, a0)\nfact alias_1: R(c0, a1)\nfact tag_0: Tag0(c0)\nfact tag_1: Tag1(c0)\nfact tag_2: Tag2(c0)\n\n## visible_theorems.abw\n\n\n## targets_visible.abw\ngoal visible_good_norm: Good0(norm(c0))",
+      "candidate": "lemma CandLemmaGood0NormTransfer: forall x:S0. Good0(x) -> Good0(norm(x))\nlemma CandLemmaGood1NormTransfer: forall x:S0. Good1(x) -> Good1(norm(x))\nlemma CandLemmaGood2NormTransfer: forall x:S0. Good2(x) -> Good2(norm(x))\nlemma CandLemmaStepClass: forall x:S0 y:S0. CandRelSameClass(x, y) -> CandRelSameClass(step(x), step(y))\ndefine CandRelSameClass(x:S0, y:S0) := R(x, y)\ndefine CandRelRepresentative0(x:S0) := norm(x) = x",
+      "public_artifact_hashes": {
+        "signature.json": "db54f758e0cdfd85c1fbc126e394054f06b19b96b24cf4cd3b4e67aa4c0b1582",
+        "axioms.abw": "dfa5fe4a769396eb5403b64d0a00bf308968ddfb1eae0b047115fb1067756d6b",
+        "visible_facts.abw": "ec67e27d4c10dbcdfa1b962b3fb0144f9fd2c611878c49547479a9b5cb12792d",
+        "visible_theorems.abw": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "targets_visible.abw": "660b44570f8df7cfd97aee70367ef2754407f326cdd6218313e53202c68a6f2c"
+      },
+      "candidate_sha256": "e6f1fb9291c17aa49b0edb88a76f11a6783a4d25b8300110e36699b88746f248"
+    },
+    {
+      "id": "abw_dev_0006_multi_step",
+      "family": "multi_step",
+      "source_split": "dev",
+      "world_id": "abw_dev_0006",
+      "schema_fingerprint": "6d4a734aec4af8d857328f5bcfb325beb413d87217065734f918b7d975c8fda6",
+      "public_formal_view": "## signature.json\n{\n  \"sorts\": [\n    {\n      \"name\": \"S0\"\n    },\n    {\n      \"name\": \"S1\"\n    },\n    {\n      \"name\": \"S2\"\n    }\n  ],\n  \"constants\": [\n    {\n      \"name\": \"c0\",\n      \"sort\": \"S0\"\n    },\n    {\n      \"name\": \"d0\",\n      \"sort\": \"S1\"\n    }\n  ],\n  \"functions\": [\n    {\n      \"name\": \"f\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    },\n    {\n      \"name\": \"g\",\n      \"input_sorts\": [\n        \"S1\"\n      ],\n      \"output_sort\": \"S1\"\n    },\n    {\n      \"name\": \"h\",\n      \"input_sorts\": [\n        \"S0\",\n        \"S1\"\n      ],\n      \"output_sort\": \"S2\"\n    }\n  ],\n  \"predicates\": [\n    {\n      \"name\": \"A0\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"A1\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"A2\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"B0\",\n      \"input_sorts\": [\n        \"S1\"\n      ]\n    },\n    {\n      \"name\": \"B1\",\n      \"input_sorts\": [\n        \"S1\"\n      ]\n    },\n    {\n      \"name\": \"B2\",\n      \"input_sorts\": [\n        \"S1\"\n      ]\n    },\n    {\n      \"name\": \"C0\",\n      \"input_sorts\": [\n        \"S2\"\n      ]\n    },\n    {\n      \"name\": \"C1\",\n      \"input_sorts\": [\n        \"S2\"\n      ]\n    },\n    {\n      \"name\": \"C2\",\n      \"input_sorts\": [\n        \"S2\"\n      ]\n    },\n    {\n      \"name\": \"R\",\n      \"input_sorts\": [\n        \"S0\",\n        \"S1\"\n      ]\n    }\n  ]\n}\n\n## axioms.abw\naxiom a0_step: forall x:S0. A0(x) -> A0(f(x))\naxiom a1_step: forall x:S0. A1(x) -> A1(f(x))\naxiom a2_step: forall x:S0. A2(x) -> A2(f(x))\naxiom b0_step: forall y:S1. B0(y) -> B0(g(y))\naxiom b1_step: forall y:S1. B1(y) -> B1(g(y))\naxiom b2_step: forall y:S1. B2(y) -> B2(g(y))\naxiom r_step: forall x:S0 y:S1. R(x, y) -> R(f(x), g(y))\naxiom construct_c: forall x:S0 y:S1. A0(x) & A1(x) & A2(x) & B0(y) & B1(y) & B2(y) & R(x, y) -> C0(h(x, y))\naxiom c0_to_c1: forall z:S2. C0(z) -> C1(z)\naxiom c1_to_c2: forall z:S2. C1(z) -> C2(z)\n\n## visible_facts.abw\nfact base_a0_0: A0(c0)\nfact base_a1_0: A1(c0)\nfact base_a2_0: A2(c0)\nfact base_b0_0: B0(d0)\nfact base_b1_0: B1(d0)\nfact base_b2_0: B2(d0)\nfact base_r_0: R(c0, d0)\n\n## visible_theorems.abw\n\n\n## targets_visible.abw\ngoal visible_k_one: C2(h(f(c0), g(d0)))",
+      "candidate": "lemma CandLemmaPairedStep: forall x:S0 y:S1. CandRelPairedGood(x, y) -> CandRelPairedGood(f(x), g(y))\nlemma CandLemmaConstructedIsFinal: forall x:S0 y:S1. CandRelPairedGood(x, y) -> C2(h(x, y))\nlemma CandLemmaConstructedGoodIntro: forall x:S0 y:S1. CandRelPairedGood(x, y) -> CandRelConstructedGood(h(x, y))\ndefine CandRelPairedGood(x:S0, y:S1) := A0(x) & A1(x) & A2(x) & B0(y) & B1(y) & B2(y) & R(x, y)\ndefine CandRelConstructedGood(z:S2) := C0(z) & C2(z)",
+      "public_artifact_hashes": {
+        "signature.json": "44e4c075f8d766b1ae0a970ad60f07e9dbd7fcea5b3aabd52548665d9a07ea39",
+        "axioms.abw": "0678102b2810932309137364a67af70cde1740fcf4322b5b78597da54a37bd94",
+        "visible_facts.abw": "9f813131f6f4150ebd0bc5f8b45b2c477792d6bfb19f60095c768220541efc8a",
+        "visible_theorems.abw": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "targets_visible.abw": "f9a2945f184d6a9b811e8a149b8437b9f332a047baff7a2361d8109cb2486038"
+      },
+      "candidate_sha256": "036a74380e043114b242496add86c5d497df0b43f3188f624c34ac14b684c4c2"
+    },
+    {
+      "id": "abw_dev_0013_multi_step",
+      "family": "multi_step",
+      "source_split": "dev",
+      "world_id": "abw_dev_0013",
+      "schema_fingerprint": "e62c2c56f28e757a9b3e60e7ce4b3153537601705c4972cbe3c187d24368936f",
+      "public_formal_view": "## signature.json\n{\n  \"sorts\": [\n    {\n      \"name\": \"S0\"\n    },\n    {\n      \"name\": \"S1\"\n    },\n    {\n      \"name\": \"S2\"\n    }\n  ],\n  \"constants\": [\n    {\n      \"name\": \"c0\",\n      \"sort\": \"S0\"\n    },\n    {\n      \"name\": \"d0\",\n      \"sort\": \"S1\"\n    }\n  ],\n  \"functions\": [\n    {\n      \"name\": \"f\",\n      \"input_sorts\": [\n        \"S0\"\n      ],\n      \"output_sort\": \"S0\"\n    },\n    {\n      \"name\": \"g\",\n      \"input_sorts\": [\n        \"S1\"\n      ],\n      \"output_sort\": \"S1\"\n    },\n    {\n      \"name\": \"h\",\n      \"input_sorts\": [\n        \"S0\",\n        \"S1\"\n      ],\n      \"output_sort\": \"S2\"\n    }\n  ],\n  \"predicates\": [\n    {\n      \"name\": \"A0\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"A1\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"A2\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"B0\",\n      \"input_sorts\": [\n        \"S1\"\n      ]\n    },\n    {\n      \"name\": \"B1\",\n      \"input_sorts\": [\n        \"S1\"\n      ]\n    },\n    {\n      \"name\": \"C0\",\n      \"input_sorts\": [\n        \"S2\"\n      ]\n    },\n    {\n      \"name\": \"C1\",\n      \"input_sorts\": [\n        \"S2\"\n      ]\n    },\n    {\n      \"name\": \"C2\",\n      \"input_sorts\": [\n        \"S2\"\n      ]\n    },\n    {\n      \"name\": \"C3\",\n      \"input_sorts\": [\n        \"S2\"\n      ]\n    },\n    {\n      \"name\": \"R\",\n      \"input_sorts\": [\n        \"S0\",\n        \"S1\"\n      ]\n    },\n    {\n      \"name\": \"Noise0\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    },\n    {\n      \"name\": \"Noise1\",\n      \"input_sorts\": [\n        \"S0\"\n      ]\n    }\n  ]\n}\n\n## axioms.abw\naxiom a0_step: forall x:S0. A0(x) -> A0(f(x))\naxiom a1_step: forall x:S0. A1(x) -> A1(f(x))\naxiom a2_step: forall x:S0. A2(x) -> A2(f(x))\naxiom b0_step: forall y:S1. B0(y) -> B0(g(y))\naxiom b1_step: forall y:S1. B1(y) -> B1(g(y))\naxiom r_step: forall x:S0 y:S1. R(x, y) -> R(f(x), g(y))\naxiom construct_c: forall x:S0 y:S1. A0(x) & A1(x) & A2(x) & B0(y) & B1(y) & R(x, y) -> C0(h(x, y))\naxiom c0_to_c1: forall z:S2. C0(z) -> C1(z)\naxiom c1_to_c2: forall z:S2. C1(z) -> C2(z)\naxiom c2_to_c3: forall z:S2. C2(z) -> C3(z)\naxiom noise_0_step: forall x:S0. Noise0(x) -> Noise0(f(x))\naxiom noise_1_step: forall x:S0. Noise1(x) -> Noise1(f(x))\n\n## visible_facts.abw\nfact base_a0_0: A0(c0)\nfact base_a1_0: A1(c0)\nfact base_a2_0: A2(c0)\nfact base_b0_0: B0(d0)\nfact base_b1_0: B1(d0)\nfact base_r_0: R(c0, d0)\nfact noise_0: Noise0(c0)\nfact noise_1: Noise1(c0)\n\n## visible_theorems.abw\n\n\n## targets_visible.abw\ngoal visible_k_one: C3(h(f(c0), g(d0)))",
+      "candidate": "lemma CandLemmaPairedStep: forall x:S0 y:S1. CandRelPairedGood(x, y) -> CandRelPairedGood(f(x), g(y))\nlemma CandLemmaConstructedIsFinal: forall x:S0 y:S1. CandRelPairedGood(x, y) -> C3(h(x, y))\nlemma CandLemmaConstructedGoodIntro: forall x:S0 y:S1. CandRelPairedGood(x, y) -> CandRelConstructedGood(h(x, y))\ndefine CandRelPairedGood(x:S0, y:S1) := A0(x) & A1(x) & A2(x) & B0(y) & B1(y) & R(x, y)\ndefine CandRelConstructedGood(z:S2) := C0(z) & C3(z)",
+      "public_artifact_hashes": {
+        "signature.json": "bac957acf944b88c6e38d081fa65c0b2b891de135661e7d2acd6d7ffa5feadc5",
+        "axioms.abw": "95ee846aebaf37a48cbadfa055326157837559c014fc3e4e8ce48cb7b08ea330",
+        "visible_facts.abw": "cc74081dd9bccd9f21ec54984e8f902293cca3d3535a50cbed2cb4b2d97259f2",
+        "visible_theorems.abw": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "targets_visible.abw": "8d8acd2cb08a69c3f48cb61722672c6b7fb07fa1679fa07383cac2de1d5871e8"
+      },
+      "candidate_sha256": "ae0c63e700402853ade55086f3138bbabb12cf8731c63a037c7401e1032f4f49"
+    }
+  ]
+}

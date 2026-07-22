@@ -6,7 +6,7 @@ ABW is both a research artifact and a reusable benchmark harness, so good
 contributions usually improve one of three things:
 
 - the formal runtime or solver interfaces
-- the benchmark, dataset, or reporting surface
+- the benchmark, dataset, or JSON result surface
 - the clarity and trustworthiness of the documentation
 
 ## Development Setup
@@ -51,22 +51,23 @@ Generate an example world:
 uv run python -m abw_core generate-world --family predicate_invention --seed 7 --output examples/tiny_world
 ```
 
-Run a smoke benchmark:
+Install the canonical dataset and inspect the generic evaluation CLI:
 
 ```bash
-uv run python scripts/generate_dataset.py --config configs/mvp.yaml --output artifacts/abw_smoke_dataset
+uv run python scripts/install_seeded_v2_dataset.py
+uv run python scripts/run_experiment.py --help
 ```
 
 ```bash
 uv run python -m abw_core run-benchmark \
-  --dataset artifacts/abw_smoke_dataset \
+  --dataset dataset/abw-formal-nl-core \
   --target-command uv \
   --target-command run \
   --target-command python \
   --target-command scripts/example_target_system.py \
   --split dev \
   --limit 10 \
-  --output artifacts/abw_benchmark_report.json
+  --output artifacts/abw_benchmark_results.json
 ```
 
 Build and validate the source distribution and wheel:
@@ -96,7 +97,7 @@ When you modify those surfaces:
 
 - explain the motivation in the merge request
 - update the relevant docs under [`docs`](docs)
-- mention whether existing generated datasets or reports need regeneration
+- mention whether existing generated datasets or JSON results need regeneration
 
 ## Release Metadata
 

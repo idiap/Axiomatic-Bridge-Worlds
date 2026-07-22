@@ -17,7 +17,6 @@ from typing import Sequence
 
 from abw_core import ir
 from abw_core.benchmark import run_benchmark
-from abw_core.benchmark_reporting import DEFAULT_COMPILE_COMMAND, render_benchmark_report_files
 from abw_core.config import load_config, manifest_payload
 from abw_core.dsl import parse_document
 from abw_core.generator import WorldGenerationRequest, generate_world
@@ -190,38 +189,6 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help="Repeat once per token when overriding the scorer backend with subprocess.",
     )
-    benchmark_parser.add_argument("--latex-output")
-    benchmark_parser.add_argument("--report-title")
-    benchmark_parser.add_argument("--report-fragment", action="store_true")
-    benchmark_parser.add_argument("--pdf-output")
-    benchmark_parser.add_argument("--compile-report-pdf", action="store_true")
-    benchmark_parser.add_argument(
-        "--report-compile-command",
-        action="append",
-        default=[],
-        help="Repeat once per token. Placeholders: {tex}, {outdir}, {pdf}.",
-    )
-
-    report_parser = subparsers.add_parser(
-        "render-benchmark-report",
-        help="Render a benchmark JSON report into LaTeX tables and optionally compile PDF output.",
-    )
-    report_parser.add_argument("--report", action="append", required=True, default=[])
-    report_parser.add_argument("--name", action="append", default=[])
-    report_parser.add_argument("--output", required=True)
-    report_parser.add_argument("--title")
-    report_parser.add_argument("--issue-limit", type=int, default=20)
-    report_parser.add_argument("--comparison-metric", default="primary_score")
-    report_parser.add_argument("--fragment", action="store_true")
-    report_parser.add_argument("--pdf-output")
-    report_parser.add_argument("--compile-pdf", action="store_true")
-    report_parser.add_argument(
-        "--compile-command",
-        action="append",
-        default=[],
-        help="Repeat once per token. Placeholders: {tex}, {outdir}, {pdf}.",
-    )
-
     score_parser = subparsers.add_parser("score-candidate", help="Score a candidate bridge against a packaged world.")
     score_parser.add_argument("--world", required=True)
     score_parser.add_argument("--candidate", required=True)
@@ -420,7 +387,7 @@ def _cmd_export_public_dataset(args: argparse.Namespace, parser: argparse.Argume
 
 
 def _cmd_run_benchmark(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
-    report = run_benchmark(
+    results = run_benchmark(
         args.dataset,
         target_command=tuple(args.target_command),
         splits=tuple(args.split),
@@ -431,47 +398,12 @@ def _cmd_run_benchmark(args: argparse.Namespace, parser: argparse.ArgumentParser
         backend_command=tuple(args.backend_command),
         output_path=args.output,
     )
-    if (args.latex_output or args.pdf_output or args.compile_report_pdf) and not args.output:
-        parser.error("run-benchmark report rendering requires --output so the JSON report is persisted first.")
-    report_artifacts = None
-    if args.latex_output or args.pdf_output or args.compile_report_pdf:
-        compile_command = tuple(args.report_compile_command) if args.report_compile_command else DEFAULT_COMPILE_COMMAND
-        report_artifacts = render_benchmark_report_files(
-            args.output,
-            args.latex_output or str(Path(args.output).with_suffix(".tex")),
-            title=args.report_title,
-            fragment=args.report_fragment,
-            compile_pdf=args.compile_report_pdf or bool(args.pdf_output),
-            pdf_output_path=args.pdf_output,
-            compile_command=compile_command,
-        )
-    if args.output or report_artifacts:
-        payload: dict[str, object] = {"summary": report["summary"]}
-        if args.output:
-            payload["output"] = str(Path(args.output))
-        if report_artifacts is not None:
-            payload["report_artifacts"] = report_artifacts
+    if args.output:
+        payload: dict[str, object] = {"summary": results["summary"]}
+        payload["output"] = str(Path(args.output))
         print(json.dumps(payload, indent=2))
     else:
-        print(json.dumps(report, indent=2))
-    return 0
-
-
-def _cmd_render_benchmark_report(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
-    compile_command = tuple(args.compile_command) if args.compile_command else DEFAULT_COMPILE_COMMAND
-    result = render_benchmark_report_files(
-        args.report,
-        args.output,
-        title=args.title,
-        issue_limit=args.issue_limit,
-        report_names=tuple(args.name),
-        comparison_metric=args.comparison_metric,
-        fragment=args.fragment,
-        compile_pdf=args.compile_pdf or bool(args.pdf_output),
-        pdf_output_path=args.pdf_output,
-        compile_command=compile_command,
-    )
-    print(json.dumps(result, indent=2))
+        print(json.dumps(results, indent=2))
     return 0
 
 
@@ -619,7 +551,6 @@ _COMMANDS = {
     "generate-dataset": _cmd_generate_dataset,
     "export-public-dataset": _cmd_export_public_dataset,
     "run-benchmark": _cmd_run_benchmark,
-    "render-benchmark-report": _cmd_render_benchmark_report,
     "score-candidate": _cmd_score_candidate,
     "countermodel-goal": _cmd_countermodel_goal,
     "start-session": _cmd_start_session,

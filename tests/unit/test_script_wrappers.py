@@ -25,23 +25,12 @@ import abw_core.cli
 @pytest.mark.parametrize(
     ("script_name", "argv", "expected_command"),
     [
-        (
-            "export_public_dataset.py",
-            ["export_public_dataset.py", "--dataset", "demo-dataset", "--output", "public-dataset"],
-            "export-public-dataset",
-        ),
-        ("inspect_world.py", ["inspect_world.py", "--world", "demo-world"], "inspect-world"),
         ("score_candidate.py", ["score_candidate.py", "--world", "demo-world"], "score-candidate"),
-        ("validate_dataset.py", ["validate_dataset.py", "--world", "demo-world"], "validate-world"),
+        ("validate_world.py", ["validate_world.py", "--world", "demo-world"], "validate-world"),
         (
             "run_benchmark.py",
             ["run_benchmark.py", "--dataset", "demo-dataset", "--target-command", "python"],
             "run-benchmark",
-        ),
-        (
-            "render_benchmark_report.py",
-            ["render_benchmark_report.py", "--report", "demo-report.json", "--output", "demo-report.tex"],
-            "render-benchmark-report",
         ),
     ],
 )

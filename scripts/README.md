@@ -1,39 +1,41 @@
-# Scripts
+# Public Evaluation Scripts
 
-This directory contains thin command-line wrappers and example adapters around
-the canonical `python -m abw_core` entrypoint.
+The scripts in this directory form the supported public evaluation surface.
+They do not select a provider or model: pass any target command that implements
+the ABW stdin/stdout protocol, or configure the included OpenAI-compatible
+adapter with neutral `ABW_MODEL_*` environment variables.
 
-The goal is convenience, not a second runtime surface.
-
-Paper-production, plot-rendering, provider-specific, historical
-reclassification, and one-off result assembly helpers may exist in a local
-working tree, but they are intentionally not part of this public script surface.
-
-## Files In This Directory
+## Evaluation
 
 | File | Purpose |
 | --- | --- |
-| `audit_dataset_diversity.py` | Audit repeated schemas, repeated public tasks, and split overlap. |
-| `build_paired_difficulty_dataset.py` | Build paired C0-C6 difficulty-shape datasets from generated source worlds. |
-| `difficulty_shape_summary.py` | Summarize benchmark JSON outputs by C0-C6 difficulty shape and family. |
-| `export_public_dataset.py` | Export a packaged dataset with private artifacts stripped out for public-only evaluation. |
-| `generate_dataset.py` | Dataset-generation entrypoint around the canonical config loader. |
-| `generate_perturbed_dataset.py` | Create semantics-preserving perturbed dataset copies for robustness analysis. |
-| `generic_model_target.py` | Neutral OpenAI-compatible target adapter configured through `ABW_MODEL_*` environment variables. |
-| `inspect_world.py` | Convenience wrapper for world inspection (also covers NL packaging output — `abw_core.cli inspect-world` renders whichever track the world was packaged with). |
-| `robustness_plan.py` | Emit model-agnostic original and perturbed `run-benchmark` commands for a robustness suite. |
-| `robustness_summary.py` | Summarize paired original-minus-perturbed robustness drops from completed JSON outputs. |
-| `run_benchmark.py` | Thin wrapper around one `run-benchmark` call (no dataset generation or validation). |
-| `run_experiment.py` | Generate (optional), validate, and run one target model against a configured dataset; writes JSON outputs and a manifest. |
-| `score_candidate.py` | Convenience wrapper for one-world candidate scoring. |
-| `validate_dataset.py` | Convenience wrapper for validation checks. |
-| `example_target_system.py` | Example target adapter that speaks the benchmark protocol for smoke testing. |
+| `install_seeded_v2_dataset.py` | Install the tracked 385-world dataset archive. |
+| `model_target.py` | Evaluate any model served by an OpenAI-compatible, Ollama, or Azure ML score endpoint. |
+| `run_experiment.py` | Validate a dataset slice, evaluate one target command, and write JSON results plus a run manifest. |
+| `run_benchmark.py` | Thin wrapper for a single benchmark call. |
+| `retry_failed_invocations.py` | Retry only failed calls in existing JSON results. |
+| `build_few_shot_exemplar_bank.py` | Build leakage-controlled, same-family exemplar banks from `dev`. |
+| `generate_perturbed_dataset.py` | Create semantics-preserving dataset variants for robustness evaluation. |
+| `robustness_plan.py` | Build model-agnostic original/perturbed benchmark commands. |
+| `build_paired_difficulty_dataset.py` | Derive paired C0-C6 evaluation views from the packaged test worlds. |
+| `validate_world.py` | Validate one packaged world before evaluation. |
+| `score_candidate.py` | Score one candidate against one packaged world. |
+| `example_target_system.py` | Reference implementation of the target-system protocol for smoke tests. |
 
-## Editing Guidance
+Paper tables, plots, statistical summaries, provider-specific launchers, and
+cluster orchestration are intentionally outside this public directory. The
+canonical output of an evaluation is JSON; downstream analysis can consume the
+world-level records and aggregate summary without depending on paper tooling.
 
-- Keep wrappers thin and route them into `abw_core.cli`.
-- Put real business logic in `abw_core/`, not here.
-- Keep public experiment helpers model-agnostic; they should emit or consume
-  `run-benchmark` JSON outputs rather than hard-code one provider or paper run.
-- Use the example target adapter as a protocol reference, not as a benchmark
-  baseline to compare against serious systems.
+## Adapter Configuration
+
+`model_target.py` reads these optional settings from `.env` or the process
+environment:
+
+- `ABW_MODEL_BASE_URL` (required unless `--base-url` is passed)
+- `ABW_MODEL_ID` (required unless `--model` is passed)
+- `ABW_MODEL_API_KEY` (optional for local unauthenticated endpoints)
+- `ABW_MODEL_MAX_TOKENS`, `ABW_MODEL_CONTEXT_TOKENS`
+- `ABW_MODEL_TEMPERATURE`, `ABW_MODEL_TIMEOUT_SECONDS`, `ABW_MODEL_RETRIES`
+
+Keep target adapters model-agnostic and keep evaluation logic in `abw_core/`.

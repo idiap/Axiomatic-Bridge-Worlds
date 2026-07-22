@@ -17,21 +17,22 @@ uv run abw inspect-world  --world examples/tiny_world
 uv run abw validate-world --world examples/tiny_world
 ```
 
-## 2. Generate a dataset
+## 2. Install or regenerate the dataset
 
 ```bash
-# 14-world all-family smoke dataset
-uv run python scripts/generate_dataset.py --output artifacts/abw_smoke_dataset
+# Install the tracked 5-dev + 50-public-test worlds per family archive.
+uv run python scripts/install_seeded_v2_dataset.py
 
-# paper-core reproduction (5 dev + 50 public-test per family; or: make paper-core)
-uv run python scripts/generate_dataset.py --config configs/paper_core.yaml --output datasets/paper_core
+# Or regenerate it from the only release preset.
+uv run python -m abw_core generate-dataset --config configs/paper_core_seeded_v2.yaml \
+  --output artifacts/paper_core_seeded_v2_regenerated
 ```
 
 Export a public-only copy (private bridge and hidden goals stripped) before
 handing a dataset to a target system:
 
 ```bash
-uv run abw export-public-dataset --dataset datasets/paper_core --output artifacts/abw_public
+uv run abw export-public-dataset --dataset dataset/abw-formal-nl-core --output artifacts/abw_public
 ```
 
 ## 3. Evaluate a model
@@ -45,61 +46,55 @@ tokens starting with `-`). The full contract is in
 
 ```bash
 uv run abw run-benchmark \
-  --dataset datasets/paper_core \
+  --dataset dataset/abw-formal-nl-core \
   --target-command uv --target-command run --target-command python \
-  --target-command scripts/generic_model_target.py \
+  --target-command scripts/model_target.py \
   --split test_public --limit 10 \
-  --output artifacts/abw_report.json
+  --output artifacts/abw_results.json
 ```
 
-`scripts/generic_model_target.py` adapts any OpenAI-compatible model via
+`scripts/model_target.py` adapts any OpenAI-compatible model via
 `ABW_MODEL_API_KEY`, `ABW_MODEL_BASE_URL`, and `ABW_MODEL_ID` (see the README).
 To run a model end to end in one step -- validate, run, write JSON outputs, and
 write a manifest -- use `scripts/run_experiment.py`:
 
 ```bash
 uv run python scripts/run_experiment.py \
-  --skip-generation --dataset-root datasets/paper_core --model-label my_model \
+  --dataset-root dataset/abw-formal-nl-core --model-label my_model \
   --target-command uv --target-command run --target-command python \
-  --target-command scripts/generic_model_target.py
+  --target-command scripts/model_target.py
 ```
 
 ## 4. Robustness and difficulty
 
 **Robustness** measures whether a score survives semantics-preserving rewrites
 (`alpha_renaming`, `axiom_order_shuffle`, `nl_paraphrase`, `distractor_insertion`).
-Make a perturbed copy, plan the paired runs, then summarize the drops:
+Make a perturbed copy and plan the paired runs:
 
 ```bash
 uv run python scripts/generate_perturbed_dataset.py \
-  --source datasets/paper_core --output artifacts/abw_perturbed/alpha_renaming \
+  --source dataset/abw-formal-nl-core --output artifacts/abw_perturbed/alpha_renaming \
   --perturbation alpha_renaming
 
 uv run python scripts/robustness_plan.py \
-  --base-dataset-root datasets/paper_core \
+  --base-dataset-root dataset/abw-formal-nl-core \
   --perturbed-dataset-root artifacts/abw_perturbed \
-  --report-dir artifacts/abw_robustness \
+  --results-dir artifacts/abw_robustness \
   --target-command uv --target-command run --target-command python \
-  --target-command scripts/generic_model_target.py \
+  --target-command scripts/model_target.py \
   --output artifacts/abw_robustness/plan.json
 
-uv run python scripts/robustness_summary.py \
-  --plan artifacts/abw_robustness/plan.json \
-  --output artifacts/abw_robustness/summary.json
 ```
 
-**Difficulty (C0-C6)** probes the same source worlds under controlled public-shape
-changes. Build the paired dataset, run `run-benchmark` on it, then summarize by
-shape:
+The plan records the original and perturbed JSON result paths, making paired
+downstream analysis independent of paper-specific tooling.
+
+**Difficulty (C0-C6)** probes the same source worlds under controlled
+public-shape changes. Build the paired dataset, then run `run-experiment.py` on
+the resulting root:
 
 ```bash
-uv run python scripts/build_paired_difficulty_dataset.py \
-  --all-families --examples-per-family 1 \
-  --output datasets/paired_difficulty_shapes --overwrite
-
-uv run python scripts/difficulty_shape_summary.py \
-  --report artifacts/abw_c0_c6_report.json \
-  --output artifacts/abw_c0_c6_summary.json
+uv run python scripts/build_paired_difficulty_dataset.py --overwrite
 ```
 
 ## 5. Diagnostics

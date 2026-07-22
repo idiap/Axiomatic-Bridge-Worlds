@@ -59,9 +59,9 @@ ABW is a suite of seven families, each requiring a different kind of bridge:
 ## Bundled Core Dataset
 
 A ready-to-use export of the benchmark ships in [`dataset/`](dataset/) as the
-`abw-formal-nl-core` package (version `0.3.0`), so you can evaluate a model
-without generating worlds first. It holds 364 packaged worlds spanning all seven
-families: a `dev` split (14 worlds, 2 per family) and a `test_public` split (350
+`abw-formal-nl-core` package (version `0.4.0`), so you can evaluate a model
+without generating worlds first. It holds 385 packaged worlds spanning all seven
+families: a `dev` split (35 worlds, 5 per family) and a `test_public` split (350
 worlds, 50 per family). Every world carries both the formal and
 natural-language tracks.
 
@@ -72,6 +72,7 @@ files; [`dataset/README.md`](dataset/README.md) lists the exact public vs.
 private files, the recommended evaluation flow, and licensing (MIT).
 
 ```bash
+uv run python scripts/install_seeded_v2_dataset.py
 uv run python -m abw_core score-candidate \
   --world dataset/abw-formal-nl-core/test_public/predicate_invention/abw_test_public_0000 \
   --candidate path/to/candidate.abw
@@ -96,13 +97,15 @@ uv run python -m abw_core inspect-world --world examples/tiny_world
 uv run pytest -q          # or: make test
 ```
 
-## Generate A Small Dataset
+## Regenerate The Dataset
 
-Generate the 14-world all-family smoke dataset (one dev + one public-test world
-per family), then inspect and score the bundled example:
+The tracked archive is the easiest starting point. To regenerate the same
+seeded-v2 dataset from source, use its only generation preset:
 
 ```bash
-uv run python scripts/generate_dataset.py --output artifacts/abw_smoke_dataset
+uv run python -m abw_core generate-dataset \
+  --config configs/paper_core_seeded_v2.yaml \
+  --output artifacts/paper_core_seeded_v2_regenerated
 
 uv run python -m abw_core inspect-world  --world examples/tiny_world
 uv run python -m abw_core score-candidate \
@@ -114,21 +117,22 @@ uv run python -m abw_core score-candidate \
 
 To score an OpenAI-compatible model without writing an adapter, provide neutral
 `ABW_MODEL_*` settings and route the target command through
-`scripts/generic_model_target.py`:
+`scripts/model_target.py`:
 
 ```bash
 ABW_MODEL_API_KEY=sk-... \
 ABW_MODEL_BASE_URL=https://api.example.test/v1 \
 ABW_MODEL_ID=my-model \
-uv run python -m abw_core run-benchmark \
-  --dataset artifacts/abw_smoke_dataset \
+uv run python scripts/run_experiment.py \
+  --dataset-root dataset/abw-formal-nl-core \
+  --model-label my-model \
   --target-command uv \
   --target-command run \
   --target-command python \
-  --target-command scripts/generic_model_target.py \
+  --target-command scripts/model_target.py \
   --split dev \
   --limit 10 \
-  --output artifacts/abw_benchmark_report.json
+  --output artifacts/abw_benchmark_results.json
 ```
 
 The runner sends one request per world and expects the target adapter to return
@@ -140,6 +144,7 @@ argv token; the same protocol accepts any custom adapter.
 
 ## Read Next
 
+- [Model Evaluation](EVALUATION.md) — Stage 1, Stage 2, few-shot, robustness, and C0-C6
 - [Documentation Index](docs/index.md) — the map of the full documentation set
 - [Project Concepts](docs/project_concepts.md) — what ABW measures, one example per family
 - [Workflows](docs/workflows.md) — diagnostics, sessions, datasets, and robustness recipes
@@ -157,7 +162,8 @@ benchmark wrappers, and the generic target adapter. Paper-specific generated
 artifacts and orchestration remain local, not part of the public framework
 surface. The curated reference package under
 `dataset/` is the tracked benchmark snapshot; generated roots under
-`datasets/` and outputs under `artifacts/` remain local by default.
+the extracted `dataset/abw-formal-nl-core/` tree and outputs under `artifacts/`
+remain local by default.
 
 ABW is intentionally bounded: there is no remote model dependency in the core
 runtime, the local proof engine is not a full higher-order prover, the

@@ -75,7 +75,7 @@ interactive queries stay bounded and public-only; novelty is a bounded heuristic
 
 ## Dataset-Level Aggregation
 
-When run as a benchmark, per-world reports roll up into dataset, split, and
+When run as a benchmark, per-world JSON records roll up into dataset, split, and
 family summaries:
 
 - the primary leaderboard metric is the mean of `total_score`

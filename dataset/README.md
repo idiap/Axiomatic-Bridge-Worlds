@@ -30,12 +30,12 @@ with the ABW software tools.
 
 - Archive: `abw-formal-nl-core.zip`
 - Dataset root after extraction: `abw-formal-nl-core/`
-- Version: `0.3.0`
-- Worlds: `364`
-- Splits: `dev` (`14` worlds), `test_public` (`350` worlds)
+- Version: `0.4.0`
+- Worlds: `385`
+- Splits: `dev` (`35` worlds), `test_public` (`350` worlds)
 - Families: `predicate_invention`, `lemma_invention`, `analogy`, `invariant`,
   `quotient`, `normal_form`, `multi_step`
-- Per-family counts: `2` dev worlds and `50` test_public worlds per family
+- Per-family counts: `5` dev worlds and `50` test_public worlds per family
 - DSL versions: core families use `abw-dsl-v1`; analogy uses `abw-dsl-v2`
 
 ## Directory Layout
@@ -118,9 +118,9 @@ then score the model's final candidate with the private and scoring files.
 
 ## Recommended Evaluation Flow
 
-1. Extract `abw-formal-nl-core.zip`.
-2. Choose a world from `abw-formal-nl-core/dev/` or
-   `abw-formal-nl-core/test_public/`.
+1. Run `python scripts/install_seeded_v2_dataset.py` from the software repository.
+2. Choose a world from `dataset/abw-formal-nl-core/dev/` or
+   `dataset/abw-formal-nl-core/test_public/`.
 3. Build the model prompt from the public model-input files listed above.
 4. Ask the model to produce an ABW candidate bridge, or controlled-natural-language
    bridge blocks for true Natural-Language Direct.

@@ -184,7 +184,7 @@ def _theory_named(world: ir.World, name: str) -> ir.Theory | None:
 
     Morphism evaluation needs to recover the source and target theory blocks
     referenced by the candidate. Returning `None` rather than raising keeps the
-    caller free to fold the failure into a normal benchmark report.
+    caller free to fold the failure into normal benchmark JSON results.
     """
 
     for theory in world.theories:
